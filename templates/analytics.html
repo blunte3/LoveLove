@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Journal Analytics</title>
+    <style>
+        body { font-family: Arial; margin: 40px; background-color: #fafafa; }
+        h1 { margin-bottom: 10px; }
+        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        a { text-decoration: none; color: #007bff; font-weight: bold; }
+        ul { list-style: none; padding: 0; }
+        li { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('home') }}">← Back to Home</a>
+    </nav>
+
+    <h1>📈 Journal Analytics</h1>
+
+    <div class="section">
+        <h2>Total Entries</h2>
+        <p>{{ total_entries }}</p>
+    </div>
+
+    <div class="section">
+        <h2>Entries by Type</h2>
+        <ul>
+        {% for journal_type, count in type_counts.items() %}
+            <li>{{ journal_type }} — {{ count }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Most Common Words</h2>
+        <ul>
+        {% for word, freq in common_words %}
+            <li>{{ word }} — {{ freq }}</li>
+        {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

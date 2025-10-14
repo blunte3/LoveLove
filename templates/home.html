@@ -9,24 +9,26 @@
         .entry { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
         .date { color: gray; font-size: 0.9em; }
         .plus-button {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            background: #007bff;
-            color: white;
-            font-size: 36px;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            text-align: center;
-            line-height: 60px;
-            text-decoration: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            position: fixed; bottom: 40px; right: 40px;
+            background: #007bff; color: white;
+            font-size: 36px; border-radius: 50%;
+            width: 60px; height: 60px;
+            text-align: center; line-height: 60px;
+            text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
         .plus-button:hover { background: #0056b3; }
+        nav a {
+            margin-right: 20px; text-decoration: none;
+            color: #007bff; font-weight: bold;
+        }
     </style>
 </head>
 <body>
+    <nav>
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('analytics') }}">Analytics</a>
+    </nav>
+
     <h1>Recent Journal Entries</h1>
 
     {% if entries %}
