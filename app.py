@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 from datetime import datetime
+import json
 from collections import Counter
 import re
 
@@ -21,9 +22,7 @@ def init_db():
 
 init_db()
 
-# ------------------------------
 # Home route
-# ------------------------------
 @app.route("/")
 def home():
     conn = sqlite3.connect("journal.db")
@@ -31,91 +30,41 @@ def home():
     c.execute("SELECT id, date, journal_type, content FROM entries ORDER BY id DESC")
     entries = c.fetchall()
     conn.close()
-    return render_template("home.html", entries=entries)
 
-# ------------------------------
+    # Decode JSON if possible for display
+    decoded_entries = []
+    for entry in entries:
+        try:
+            content_dict = json.loads(entry[3])
+            text_preview = content_dict.get("content") or next(iter(content_dict.values()), "")
+            text_preview = (text_preview[:120] + "...") if len(text_preview) > 120 else text_preview
+        except:
+            text_preview = entry[3]
+        decoded_entries.append((entry[0], entry[1], entry[2], text_preview))
+
+    return render_template("home.html", entries=decoded_entries)
+
 # New entry route
-# ------------------------------
 @app.route("/new", methods=["GET", "POST"])
 def new_entry():
     if request.method == "POST":
-        journal_type = request.form.get("journal_type")
+        journal_type = request.form["journal_type"]
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Handle each journal type and combine its inputs into a single string
-        if journal_type == "Free Write":
-            content = request.form.get("content", "")
+        # Store all form data as JSON
+        entry_data = {key: value for key, value in request.form.items()}
 
-        elif journal_type == "Daily Journal - Morning":
-            sleep_quality = request.form.get("sleep_quality", "")
-            sleep_notes = request.form.get("sleep_notes", "")
-            gratitudes = request.form.get("gratitudes", "")
-            affirmations = request.form.get("affirmations", "")
-            goals = request.form.get("goals", "")
-            actions = request.form.get("actions", "")
-            morning_freetext = request.form.get("morning_freetext", "")
-            content = (
-                f"🌅 Daily Journal - Morning\n"
-                f"Sleep Quality: {sleep_quality}\n"
-                f"Notes: {sleep_notes}\n\n"
-                f"Gratitudes:\n{gratitudes}\n\n"
-                f"Affirmations:\n{affirmations}\n\n"
-                f"Goals:\n{goals}\n\n"
-                f"Action Plans:\n{actions}\n\n"
-                f"Free Thoughts:\n{morning_freetext}"
-            )
-
-        elif journal_type == "Daily Journal - Night":
-            night_gratitudes = request.form.get("night_gratitudes", "")
-            positives = request.form.get("positives", "")
-            goal_progress = request.form.get("goal_progress", "")
-            night_freetext = request.form.get("night_freetext", "")
-            content = (
-                f"🌙 Daily Journal - Night\n"
-                f"Gratitudes: {night_gratitudes}\n\n"
-                f"Positive Actions/Thoughts: {positives}\n\n"
-                f"Goal Progress: {goal_progress}\n\n"
-                f"Free Thoughts: {night_freetext}"
-            )
-
-        elif journal_type == "Situational Journal":
-            situation = request.form.get("situation", "")
-            category = request.form.get("situation_category", "")
-            feelings = request.form.get("feelings", "")
-            used_skills = request.form.get("used_skills", "")
-            skills_used = request.form.get("skills_used", "")
-            after_effect = request.form.get("after_effect", "")
-            content = (
-                f"🧠 Situational Journal\n"
-                f"Situation: {situation}\n"
-                f"Category: {category}\n\n"
-                f"Feelings: {feelings}\n\n"
-                f"Used Skills: {used_skills}\n"
-                f"Skills Used: {skills_used}\n\n"
-                f"After Effect: {after_effect}"
-            )
-
-        else:
-            # fallback in case form type not recognized
-            content = "No content submitted."
-
-        # Save entry
         conn = sqlite3.connect("journal.db")
         c = conn.cursor()
-        c.execute(
-            "INSERT INTO entries (date, journal_type, content) VALUES (?, ?, ?)",
-            (date, journal_type, content)
-        )
+        c.execute("INSERT INTO entries (date, journal_type, content) VALUES (?, ?, ?)",
+                  (date, journal_type, json.dumps(entry_data)))
         conn.commit()
         conn.close()
-
         return redirect(url_for("home"))
 
     return render_template("new_entry.html")
 
-# ------------------------------
 # Analytics route
-# ------------------------------
 @app.route("/analytics")
 def analytics():
     conn = sqlite3.connect("journal.db")
@@ -131,20 +80,44 @@ def analytics():
     for journal_type, _ in rows:
         type_counts[journal_type] = type_counts.get(journal_type, 0) + 1
 
-    # Word frequency across all entries
-    all_text = " ".join(content for _, content in rows).lower()
-    words = re.findall(r'\b[a-z]{3,}\b', all_text)  # words >= 3 letters
+    # Combine all text content
+    all_text = ""
+    for _, content in rows:
+        try:
+            content_dict = json.loads(content)
+            all_text += " ".join(content_dict.values()) + " "
+        except:
+            all_text += content + " "
+
+    words = re.findall(r'\b[a-z]{3,}\b', all_text.lower())
     common_words = Counter(words).most_common(10)
 
-    return render_template(
-        "analytics.html",
-        total_entries=total_entries,
-        type_counts=type_counts,
-        common_words=common_words
-    )
+    return render_template("analytics.html",
+                           total_entries=total_entries,
+                           type_counts=type_counts,
+                           common_words=common_words)
 
-# ------------------------------
-# Run app
-# ------------------------------
+@app.route("/entry/<int:entry_id>")
+def view_entry(entry_id):
+    conn = sqlite3.connect("journal.db")
+    c = conn.cursor()
+    c.execute("SELECT date, journal_type, content FROM entries WHERE id = ?", (entry_id,))
+    row = c.fetchone()
+    conn.close()
+
+    if not row:
+        return "Entry not found.", 404
+
+    date, journal_type, content = row
+
+    # Parse JSON safely
+    import json
+    try:
+        entry_data = json.loads(content)
+    except:
+        entry_data = {"content": content}
+
+    return render_template("entry.html", date=date, journal_type=journal_type, entry_data=entry_data, content=content)
+
 if __name__ == "__main__":
     app.run(debug=True)

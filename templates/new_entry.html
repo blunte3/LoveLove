@@ -15,6 +15,7 @@
         label { font-weight: bold; }
         h2 { margin-top: 30px; }
     </style>
+
     <script>
         function showSection() {
             const journalType = document.getElementById("journal_type").value;
@@ -60,9 +61,11 @@
 <body>
     <h1>New Journal Entry</h1>
 
-    <form method="post">
+    <!-- IMPORTANT: Action set to Flask route -->
+    <form method="POST" action="{{ url_for('new_entry') }}">
         <label for="journal_type"><b>Journal Type:</b></label>
-        <select name="journal_type" id="journal_type" onchange="showSection()">
+        <select name="journal_type" id="journal_type" onchange="showSection()" required>
+            <option value="">-- Select a Journal Type --</option>
             <option value="Free Write">Free Write</option>
             <option value="Daily Journal - Morning">Daily Journal - Morning</option>
             <option value="Daily Journal - Night">Daily Journal - Night</option>
@@ -70,9 +73,9 @@
         </select>
 
         <!-- Free Write -->
-        <div id="free_write" class="section">
+        <div id="free_write" class="section" style="display:none;">
             <h2>Free Write</h2>
-            <textarea name="content" placeholder="Write your thoughts here..." required></textarea>
+            <textarea name="content" placeholder="Write your thoughts here..."></textarea>
         </div>
 
         <!-- Morning Journal -->
@@ -80,6 +83,7 @@
             <h2>Daily Journal - Morning</h2>
             <label>How was your sleep quality?</label>
             <input type="text" name="sleep_quality" placeholder="Good / Okay / Bad">
+
             <label>If bad, why? What did you do before bed?</label>
             <textarea name="sleep_notes" placeholder="Describe what affected your sleep..."></textarea>
 
