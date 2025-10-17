@@ -1,36 +1,32 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 from datetime import datetime
-import os
+from collections import Counter
+import re
 
 app = Flask(__name__)
-DB_FILE = "journal.db"
 
-# ------------------------------
-# Initialize database if not exists
-# ------------------------------
+# Initialize database
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("journal.db")
     c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS entries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT,
-            journal_type TEXT,
-            content TEXT
-        )
-    """)
+    c.execute('''CREATE TABLE IF NOT EXISTS entries (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    date TEXT,
+                    journal_type TEXT,
+                    content TEXT
+                )''')
     conn.commit()
     conn.close()
 
 init_db()
 
 # ------------------------------
-# Home Page
+# Home route
 # ------------------------------
 @app.route("/")
 def home():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("journal.db")
     c = conn.cursor()
     c.execute("SELECT id, date, journal_type, content FROM entries ORDER BY id DESC")
     entries = c.fetchall()
@@ -38,19 +34,17 @@ def home():
     return render_template("home.html", entries=entries)
 
 # ------------------------------
-# New Entry Page
+# New entry route
 # ------------------------------
 @app.route("/new", methods=["GET", "POST"])
 def new_entry():
     if request.method == "POST":
         journal_type = request.form.get("journal_type")
-        date = datetime.now().strftime("%Y-%m-%d %H:%M")
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # ------------------------------
-        # Handle each journal type
-        # ------------------------------
+        # Handle each journal type and combine its inputs into a single string
         if journal_type == "Free Write":
-            content = request.form.get("content")
+            content = request.form.get("content", "")
 
         elif journal_type == "Daily Journal - Morning":
             sleep_quality = request.form.get("sleep_quality", "")
@@ -60,8 +54,8 @@ def new_entry():
             goals = request.form.get("goals", "")
             actions = request.form.get("actions", "")
             morning_freetext = request.form.get("morning_freetext", "")
-            # Combine into single content string
             content = (
+                f"🌅 Daily Journal - Morning\n"
                 f"Sleep Quality: {sleep_quality}\n"
                 f"Notes: {sleep_notes}\n\n"
                 f"Gratitudes:\n{gratitudes}\n\n"
@@ -77,6 +71,7 @@ def new_entry():
             goal_progress = request.form.get("goal_progress", "")
             night_freetext = request.form.get("night_freetext", "")
             content = (
+                f"🌙 Daily Journal - Night\n"
                 f"Gratitudes: {night_gratitudes}\n\n"
                 f"Positive Actions/Thoughts: {positives}\n\n"
                 f"Goal Progress: {goal_progress}\n\n"
@@ -91,6 +86,7 @@ def new_entry():
             skills_used = request.form.get("skills_used", "")
             after_effect = request.form.get("after_effect", "")
             content = (
+                f"🧠 Situational Journal\n"
                 f"Situation: {situation}\n"
                 f"Category: {category}\n\n"
                 f"Feelings: {feelings}\n\n"
@@ -100,15 +96,16 @@ def new_entry():
             )
 
         else:
-            content = request.form.get("content", "")
+            # fallback in case form type not recognized
+            content = "No content submitted."
 
-        # ------------------------------
-        # Save to database
-        # ------------------------------
-        conn = sqlite3.connect(DB_FILE)
+        # Save entry
+        conn = sqlite3.connect("journal.db")
         c = conn.cursor()
-        c.execute("INSERT INTO entries (date, journal_type, content) VALUES (?, ?, ?)",
-                  (date, journal_type, content))
+        c.execute(
+            "INSERT INTO entries (date, journal_type, content) VALUES (?, ?, ?)",
+            (date, journal_type, content)
+        )
         conn.commit()
         conn.close()
 
@@ -117,14 +114,37 @@ def new_entry():
     return render_template("new_entry.html")
 
 # ------------------------------
-# Analytics Placeholder
+# Analytics route
 # ------------------------------
 @app.route("/analytics")
 def analytics():
-    return "<h1>Analytics page coming soon!</h1><p>Will visualize journal patterns, mood trends, etc.</p>"
+    conn = sqlite3.connect("journal.db")
+    c = conn.cursor()
+    c.execute("SELECT journal_type, content FROM entries")
+    rows = c.fetchall()
+    conn.close()
+
+    total_entries = len(rows)
+
+    # Count entries per type
+    type_counts = {}
+    for journal_type, _ in rows:
+        type_counts[journal_type] = type_counts.get(journal_type, 0) + 1
+
+    # Word frequency across all entries
+    all_text = " ".join(content for _, content in rows).lower()
+    words = re.findall(r'\b[a-z]{3,}\b', all_text)  # words >= 3 letters
+    common_words = Counter(words).most_common(10)
+
+    return render_template(
+        "analytics.html",
+        total_entries=total_entries,
+        type_counts=type_counts,
+        common_words=common_words
+    )
 
 # ------------------------------
-# Run the app
+# Run app
 # ------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
