@@ -4,29 +4,156 @@
     <meta charset="UTF-8">
     <title>New Entry</title>
     <style>
-        body { font-family: Arial; margin: 40px; background-color: #fafafa; }
-        textarea { width: 100%; height: 300px; font-size: 16px; padding: 10px; }
-        select, button { font-size: 16px; margin-top: 10px; padding: 5px 10px; }
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #fafafa; }
+        textarea, input, select { width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; margin-top: 5px; }
+        textarea { min-height: 100px; }
+        select, button { margin-top: 10px; padding: 8px 10px; }
         button { background: #007bff; color: white; border: none; border-radius: 6px; }
         button:hover { background: #0056b3; }
         a { text-decoration: none; color: #007bff; }
+        .section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        label { font-weight: bold; }
+        h2 { margin-top: 30px; }
     </style>
+    <script>
+        function showSection() {
+            const journalType = document.getElementById("journal_type").value;
+            const sections = document.querySelectorAll(".section");
+            sections.forEach(sec => sec.style.display = "none");
+
+            if (journalType === "Free Write") {
+                document.getElementById("free_write").style.display = "block";
+            } else if (journalType === "Daily Journal - Morning") {
+                document.getElementById("morning").style.display = "block";
+                showRandomReminder("morning_reminder");
+            } else if (journalType === "Daily Journal - Night") {
+                document.getElementById("night").style.display = "block";
+                showRandomReminder("night_reminder");
+            } else if (journalType === "Situational Journal") {
+                document.getElementById("situational").style.display = "block";
+            }
+        }
+
+        function showRandomReminder(elementId) {
+            const morningReminders = [
+                "Remember to breathe deeply today 🌤️",
+                "Go outside and feel the sun ☀️",
+                "Drink water and take a walk 💧",
+                "Smile at yourself in the mirror 😊",
+                "You’re capable of great things — take it slow 🌱"
+            ];
+            const nightReminders = [
+                "Let go of the day, you did enough 🌙",
+                "Take a deep breath and release your worries 💫",
+                "Stretch and feel your body unwind 💤",
+                "Be kind to yourself — tomorrow is a new day 🌌",
+                "Read or listen to something calming before sleep 🌜"
+            ];
+            const reminders = elementId.includes("morning") ? morningReminders : nightReminders;
+            const chosen = reminders[Math.floor(Math.random() * reminders.length)];
+            document.getElementById(elementId).textContent = chosen;
+        }
+
+        window.onload = showSection;
+    </script>
 </head>
 <body>
     <h1>New Journal Entry</h1>
 
     <form method="post">
         <label for="journal_type"><b>Journal Type:</b></label>
-        <select name="journal_type" id="journal_type">
+        <select name="journal_type" id="journal_type" onchange="showSection()">
             <option value="Free Write">Free Write</option>
-            <option value="Situational Prompt" disabled>Situational Prompt</option>
-            <option value="Morning Prompt" disabled>Morning Prompt</option>
-            <option value="Night Prompt" disabled>Night Prompt</option>
+            <option value="Daily Journal - Morning">Daily Journal - Morning</option>
+            <option value="Daily Journal - Night">Daily Journal - Night</option>
+            <option value="Situational Journal">Situational Journal</option>
         </select>
-        <br><br>
 
-        <textarea name="content" placeholder="Write your thoughts here..." required></textarea>
-        <br>
+        <!-- Free Write -->
+        <div id="free_write" class="section">
+            <h2>Free Write</h2>
+            <textarea name="content" placeholder="Write your thoughts here..." required></textarea>
+        </div>
+
+        <!-- Morning Journal -->
+        <div id="morning" class="section" style="display:none;">
+            <h2>Daily Journal - Morning</h2>
+            <label>How was your sleep quality?</label>
+            <input type="text" name="sleep_quality" placeholder="Good / Okay / Bad">
+            <label>If bad, why? What did you do before bed?</label>
+            <textarea name="sleep_notes" placeholder="Describe what affected your sleep..."></textarea>
+
+            <label>3 Gratitudes:</label>
+            <textarea name="gratitudes" placeholder="What are you grateful for today?"></textarea>
+
+            <label>3 Affirmations ("I" statements):</label>
+            <textarea name="affirmations" placeholder="I am strong, I am calm, I am focused..."></textarea>
+
+            <label>Daily Goal(s):</label>
+            <textarea name="goals" placeholder="What are your main goals for today?"></textarea>
+
+            <label>Action Plan(s) for Goal(s):</label>
+            <textarea name="actions" placeholder="Steps you'll take to achieve your goals..."></textarea>
+
+            <div class="reminder">
+                <b>☀️ Reminder for a Good Day:</b> <span id="morning_reminder"></span>
+            </div>
+
+            <label>Free-text Entry:</label>
+            <textarea name="morning_freetext" placeholder="Any other reflections or thoughts..."></textarea>
+        </div>
+
+        <!-- Night Journal -->
+        <div id="night" class="section" style="display:none;">
+            <h2>Daily Journal - Night</h2>
+            <label>3 Gratitudes from Today:</label>
+            <textarea name="night_gratitudes" placeholder="List three things you’re grateful for tonight..."></textarea>
+
+            <label>3 Positive Actions, Thoughts, or Experiences:</label>
+            <textarea name="positives" placeholder="Moments you’re proud of, happy about, or learned from..."></textarea>
+
+            <label>Daily Goal(s) % Complete and Why:</label>
+            <textarea name="goal_progress" placeholder="How much progress did you make and what affected it?"></textarea>
+
+            <div class="reminder">
+                <b>🌙 Reminder for a Good Night:</b> <span id="night_reminder"></span>
+            </div>
+
+            <label>Free-text Entry:</label>
+            <textarea name="night_freetext" placeholder="Any reflections, feelings, or closing thoughts..."></textarea>
+        </div>
+
+        <!-- Situational Journal -->
+        <div id="situational" class="section" style="display:none;">
+            <h2>Situational Journal</h2>
+            <label>Situation / Reasons for Journaling:</label>
+            <textarea name="situation" placeholder="What happened? What triggered your need to journal?"></textarea>
+
+            <label>Category:</label>
+            <select name="situation_category">
+                <option value="Interpersonal">Interpersonal</option>
+                <option value="Intrapersonal">Intrapersonal</option>
+                <option value="Existential">Existential</option>
+                <option value="Societal">Societal</option>
+                <option value="Other">Other / General</option>
+            </select>
+
+            <label>How did this make you feel?</label>
+            <textarea name="feelings" placeholder="Describe your emotions..."></textarea>
+
+            <label>If negative, did you use skills to help remedy the situation?</label>
+            <select name="used_skills">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+
+            <label>If yes, what skills did you utilize?</label>
+            <textarea name="skills_used" placeholder="e.g., mindfulness, deep breathing, reframing..."></textarea>
+
+            <label>Did the skills help? How do you feel now?</label>
+            <textarea name="after_effect" placeholder="Reflect on whether it helped and how you feel..."></textarea>
+        </div>
+
         <button type="submit">Save Entry</button>
     </form>
 
