@@ -11,14 +11,22 @@ app = Flask(__name__)
 def init_db():
     conn = sqlite3.connect("journal.db")
     c = conn.cursor()
+    # Create table if it doesn't exist
     c.execute('''CREATE TABLE IF NOT EXISTS entries (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     date TEXT,
                     journal_type TEXT,
                     content TEXT
                 )''')
+    # Check if 'title' column exists
+    c.execute("PRAGMA table_info(entries)")
+    columns = [col[1] for col in c.fetchall()]
+    if "title" not in columns:
+        c.execute("ALTER TABLE entries ADD COLUMN title TEXT")
     conn.commit()
     conn.close()
+
+
 
 init_db()
 
@@ -48,6 +56,7 @@ def home():
 @app.route("/new", methods=["GET", "POST"])
 def new_entry():
     if request.method == "POST":
+        title = request.form.get("title", "")
         journal_type = request.form["journal_type"]
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -56,8 +65,8 @@ def new_entry():
 
         conn = sqlite3.connect("journal.db")
         c = conn.cursor()
-        c.execute("INSERT INTO entries (date, journal_type, content) VALUES (?, ?, ?)",
-                  (date, journal_type, json.dumps(entry_data)))
+        c.execute("INSERT INTO entries (date, title, journal_type, content) VALUES (?, ?, ?, ?)",
+                  (date, title, journal_type, json.dumps(entry_data)))
         conn.commit()
         conn.close()
         return redirect(url_for("home"))

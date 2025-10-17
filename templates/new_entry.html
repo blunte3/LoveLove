@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>New Entry</title>
+
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #fafafa; }
         textarea, input, select { width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; margin-top: 5px; }
@@ -63,6 +64,8 @@
 
     <!-- IMPORTANT: Action set to Flask route -->
     <form method="POST" action="{{ url_for('new_entry') }}">
+        <label for="title"><b>Title:</b></label>
+        <input type="text" name="title" id="title" placeholder="Give this entry a title (optional)">
         <label for="journal_type"><b>Journal Type:</b></label>
         <select name="journal_type" id="journal_type" onchange="showSection()" required>
             <option value="">-- Select a Journal Type --</option>
