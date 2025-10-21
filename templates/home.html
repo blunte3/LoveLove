@@ -31,17 +31,21 @@
 
     <h1>Recent Journal Entries</h1>
 
-    {% if entries %}
-        {% for id, date, title, journal_type, content in entries %}
-            <div class="entry">
-                <div class="date">{{ date }} — <b>{{ journal_type }}</b></div>
-                <p><a href="{{ url_for('view_entry', entry_id=id) }}">{{ title }}</a></p>
-                <p>{{ content[:200] }}{% if content|length > 200 %}...{% endif %}</p>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p>No journal entries yet. Click + to add one!</p>
-    {% endif %}
+        {% if entries %}
+            {% for id, date, title, journal_type, content in entries %}
+                <div class="entry">
+                    <div class="date">{{ date }} — <b>{{ journal_type }}</b></div>
+                    <p><a href="{{ url_for('view_entry', entry_id=id) }}">{{ title }}</a></p>
+
+                    {% if journal_type != "Free Write" %}
+                        <p>{{ content[:200] }}{% if content|length > 200 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No journal entries yet. Click + to add one!</p>
+        {% endif %}
+
 
     <a href="{{ url_for('new_entry') }}" class="plus-button">+</a>
 </body>

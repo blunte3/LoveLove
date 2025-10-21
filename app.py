@@ -17,7 +17,6 @@ def init_db():
                     journal_type TEXT,
                     content TEXT
                 )''')
-    # Ensure title column exists
     c.execute("PRAGMA table_info(entries)")
     columns = [col[1] for col in c.fetchall()]
     if "title" not in columns:
@@ -31,7 +30,7 @@ init_db()
 def home():
     conn = sqlite3.connect("journal.db")
     c = conn.cursor()
-    # ✅ include title in select
+    # include title
     c.execute("SELECT id, date, title, journal_type, content FROM entries ORDER BY id DESC")
     entries = c.fetchall()
     conn.close()
@@ -39,16 +38,18 @@ def home():
     decoded_entries = []
     for entry in entries:
         entry_id, date, title, journal_type, content = entry
+
+        # Default title to date if missing or blank
+        if not title or title.strip() == "":
+            title = date
+
+        # Create content preview (for non-Free Write entries)
         try:
             content_dict = json.loads(content)
             text_preview = content_dict.get("content") or next(iter(content_dict.values()), "")
             text_preview = (text_preview[:120] + "...") if len(text_preview) > 120 else text_preview
         except:
             text_preview = content
-
-        # ✅ Default title to date if missing
-        if not title or title.strip() == "":
-            title = date
 
         decoded_entries.append((entry_id, date, title, journal_type, text_preview))
 
@@ -61,7 +62,7 @@ def new_entry():
         journal_type = request.form["journal_type"]
         date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # ✅ Default title to date if none provided
+        # Default title to date only if not provided
         if not title:
             title = date
 
