@@ -1,0 +1,22 @@
+# Ignore Python cache and environment files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environments
+.env/
+venv/
+.venv/
+
+# Ignore local database
+journal.db
+
+# Ignore any backup or temporary files
+*.sqlite3
+*.db-journal
+*.log
+
+# VSCode / IDE settings
+.vscode/
+.idea/
