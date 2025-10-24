@@ -18,14 +18,16 @@
 
   <!-- Navbar -->
   <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
-    <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
-      <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
-      <div class="space-x-6">
-        <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
-        <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a>
-      </div>
+  <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
+    <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
+    <div class="space-x-6">
+    <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
+    <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a>
+    <a href="{{ url_for('skills') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Skills</a>
     </div>
+  </div>
   </nav>
+
 
   <!-- Content -->
   <main class="max-w-5xl mx-auto px-6 py-10">
