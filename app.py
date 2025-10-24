@@ -7,6 +7,71 @@ import re
 
 app = Flask(__name__)
 
+# ----- SKILL DATABASE -----
+skills_db = {
+    "Mindfulness": {
+        "category": "Distress Tolerance",
+        "definition": "Mindfulness is the practice of being fully present and aware of your thoughts, feelings, and surroundings without judgment.",
+        "how_to": [
+            "Sit or lie down comfortably.",
+            "Focus on your breath — the inhale and exhale.",
+            "Notice sensations in your body.",
+            "When your mind wanders, gently return to your breath."
+        ],
+        "enhancements": {
+            "guided_breathing": True,
+            "reflection": True,
+            "related": ["Grounding", "Radical Acceptance"]
+        }
+    },
+    "Grounding": {
+        "category": "Distress Tolerance",
+        "definition": "Grounding techniques bring your focus to the present moment to help reduce anxiety, panic, or dissociation.",
+        "how_to": [
+            "Name 5 things you can see.",
+            "Name 4 things you can touch.",
+            "Name 3 things you can hear.",
+            "Name 2 things you can smell.",
+            "Name 1 thing you can taste."
+        ],
+        "enhancements": {
+            "guided_breathing": False,
+            "reflection": True,
+            "related": ["Mindfulness", "Deep Breathing"]
+        }
+    },
+    "Cognitive Reframing": {
+        "category": "Cognitive Skills",
+        "definition": "Reframing is changing how you think about a situation to view it from a more balanced and positive perspective.",
+        "how_to": [
+            "Identify a stressful thought or belief.",
+            "Ask: Is this 100% true? What are other possible perspectives?",
+            "Replace the thought with a more realistic, helpful one.",
+            "Reflect on how this changes how you feel."
+        ],
+        "enhancements": {
+            "guided_breathing": False,
+            "reflection": True,
+            "related": ["Self Compassion", "Cognitive Distortions"]
+        }
+    },
+    "Radical Acceptance": {
+        "category": "Emotion Regulation",
+        "definition": "Radical acceptance means fully accepting reality as it is — not fighting against what you cannot change.",
+        "how_to": [
+            "Acknowledge your pain and discomfort.",
+            "Remind yourself that reality cannot be changed by denial.",
+            "Say to yourself: 'It is what it is, even if I don’t like it.'",
+            "Focus your energy on what you can control next."
+        ],
+        "enhancements": {
+            "guided_breathing": True,
+            "reflection": True,
+            "related": ["Mindfulness", "Acceptance and Commitment"]
+        }
+    }
+}
+
 # Initialize database
 def init_db():
     conn = sqlite3.connect("journal.db")
@@ -126,65 +191,68 @@ def view_entry(entry_id):
 
     return render_template("entry.html", date=date, journal_type=journal_type, entry_data=entry_data, content=content)
 
-@app.route('/skills')
+@app.route("/skills")
 def skills():
-    skills_data = {
-        "Distress Tolerance": [
-            {
-                "name": "Grounding",
-                "definition": "Using your five senses to reconnect with the present moment.",
-                "how_to": "Focus on 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste.",
-                "tags": ["mindfulness", "distress", "grounding"]
-            },
-            {
-                "name": "Radical Acceptance",
-                "definition": "Accepting reality fully, even when it’s painful, to reduce suffering.",
-                "how_to": "Remind yourself that reality cannot be changed by resistance. Say: 'It is what it is, and I can handle it.'",
-                "tags": ["acceptance", "DBT", "distress"]
-            },
-            {
-                "name": "Mindfulness",
-                "definition": "Paying attention to the present moment without judgment.",
-                "how_to": "Notice your breath, sensations, and thoughts gently without labeling them as good or bad.",
-                "tags": ["mindfulness", "calm", "CBT"]
-            },
-            {
-                "name": "Exercise",
-                "definition": "Moving your body to release tension and improve emotional state.",
-                "how_to": "Try stretching, yoga, or a walk outside — even 10 minutes can shift your mood.",
-                "tags": ["exercise", "stress-relief", "distress"]
-            }
-        ],
-        "Cognitive & Emotional Growth": [
-            {
-                "name": "Cognitive Reframing",
-                "definition": "Changing how you interpret events to see them more realistically or positively.",
-                "how_to": "Challenge negative thoughts by asking: 'What’s another way to look at this?'",
-                "tags": ["CBT", "reframing", "thoughts"]
-            },
-            {
-                "name": "Self-Compassion",
-                "definition": "Treating yourself with the same kindness you’d offer a friend.",
-                "how_to": "Say: 'It’s okay to struggle. I’m doing my best, and that’s enough.'",
-                "tags": ["self-care", "compassion", "emotional-growth"]
-            }
-        ],
-        "Interpersonal & Communication": [
-            {
-                "name": "DEAR MAN",
-                "definition": "A DBT skill for assertive communication to get your needs met.",
-                "how_to": "Describe, Express, Assert, Reinforce, stay Mindful, Appear confident, Negotiate.",
-                "tags": ["DBT", "communication", "assertiveness"]
-            },
-            {
-                "name": "Active Listening",
-                "definition": "Fully focusing on what someone is saying rather than preparing your reply.",
-                "how_to": "Listen, nod, summarize what they said, and avoid interrupting.",
-                "tags": ["communication", "mindfulness", "relationships"]
-            }
-        ]
+    skills_db = {
+        "Grounding": {
+            "category": "Distress Tolerance",
+            "definition": "A technique to help you stay present by focusing on physical sensations or immediate surroundings.",
+            "steps": [
+                "Notice 5 things you can see.",
+                "Notice 4 things you can touch.",
+                "Notice 3 things you can hear.",
+                "Notice 2 things you can smell.",
+                "Notice 1 thing you can taste."
+            ],
+            "enhancement": "breathe"
+        },
+        "Mindfulness": {
+            "category": "Mindfulness",
+            "definition": "Being aware of the present moment without judgment.",
+            "steps": [
+                "Focus on your breathing.",
+                "Notice when your mind wanders.",
+                "Gently bring your focus back to the breath."
+            ],
+            "enhancement": "reflection"
+        },
+        "Radical Acceptance": {
+            "category": "Distress Tolerance",
+            "definition": "Accepting reality as it is — even when painful — without trying to fight it.",
+            "steps": [
+                "Acknowledge the situation.",
+                "Recognize what you can and can’t control.",
+                "Choose acceptance rather than resistance."
+            ],
+            "enhancement": "audio"
+        },
+        "Reframing": {
+            "category": "Goals & Values",
+            "definition": "Changing your perspective on a situation to view it in a more constructive way.",
+            "steps": [
+                "Identify the negative thought.",
+                "Ask: 'Is this 100% true?'",
+                "Replace it with a more balanced thought."
+            ],
+            "enhancement": "reflection"
+        }
     }
-    return render_template("skills.html", skills_data=skills_data)
+
+    return render_template("skills.html", skills=skills_db)
+
+@app.route("/skill/<name>")
+def skill_detail(name):
+    skill = skills_db.get(name)
+    if not skill:
+        return render_template("skill_detail.html", skill={
+            "name": name,
+            "category": "Unknown",
+            "definition": "Skill not found.",
+            "how_to": [],
+            "enhancements": {}
+        })
+    skill["name"] = name
+    return render_template("skill_detail.html", skill=skill)
 
 if __name__ == "__main__":
     app.run(debug=True)
