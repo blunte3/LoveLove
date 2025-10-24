@@ -1,170 +1,123 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>New Entry</title>
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <title>New Entry</title> <script src="https://cdn.tailwindcss.com"></script> <style> :root { --primary: #4fb6b2; --secondary: #9b8cff; --bg-light: #f8fafc; --text-dark: #2d2f34; } </style> </head> <body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen"> <!-- Navbar --> <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10"> <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6"> <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1> <div class="space-x-6"> <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a> <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a> </div> </div> </nav> <!-- Main Content --> <main class="max-w-3xl mx-auto px-6 py-10"> <h2 class="text-3xl font-bold mb-8 text-center text-[var(--secondary)]">New Journal Entry</h2>
+<form method="POST" action="{{ url_for('new_entry') }}" class="space-y-8 bg-white rounded-2xl shadow-md p-8">
+  <!-- Title -->
+  <div>
+    <label for="title" class="font-semibold block mb-2">Title</label>
+    <input id="title" name="title" type="text" placeholder="Give this entry a title (optional)"
+           class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none">
+  </div>
 
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #fafafa; }
-        textarea, input, select { width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; margin-top: 5px; }
-        textarea { min-height: 100px; }
-        select, button { margin-top: 10px; padding: 8px 10px; }
-        button { background: #007bff; color: white; border: none; border-radius: 6px; }
-        button:hover { background: #0056b3; }
-        a { text-decoration: none; color: #007bff; }
-        .section { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
-        label { font-weight: bold; }
-        h2 { margin-top: 30px; }
-    </style>
+  <!-- Journal Type -->
+  <div>
+    <label for="journal_type" class="font-semibold block mb-2">Journal Type</label>
+    <select id="journal_type" name="journal_type" onchange="showSection()" required
+            class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none">
+      <option value="">-- Select a Journal Type --</option>
+      <option value="Free Write">Free Write</option>
+      <option value="Daily Journal - Morning">Daily Journal - Morning</option>
+      <option value="Daily Journal - Night">Daily Journal - Night</option>
+      <option value="Situational Journal">Situational Journal</option>
+    </select>
+  </div>
 
-    <script>
-        function showSection() {
-            const journalType = document.getElementById("journal_type").value;
-            const sections = document.querySelectorAll(".section");
-            sections.forEach(sec => sec.style.display = "none");
+  <!-- Free Write -->
+  <div id="free_write" class="hidden space-y-4">
+    <h3 class="text-xl font-semibold text-[var(--primary)]">Free Write</h3>
+    <textarea name="content" placeholder="Write your thoughts here..."
+              class="w-full border border-gray-300 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
+  </div>
 
-            if (journalType === "Free Write") {
-                document.getElementById("free_write").style.display = "block";
-            } else if (journalType === "Daily Journal - Morning") {
-                document.getElementById("morning").style.display = "block";
-                showRandomReminder("morning_reminder");
-            } else if (journalType === "Daily Journal - Night") {
-                document.getElementById("night").style.display = "block";
-                showRandomReminder("night_reminder");
-            } else if (journalType === "Situational Journal") {
-                document.getElementById("situational").style.display = "block";
-            }
-        }
+  <!-- Morning Journal -->
+  <div id="morning" class="hidden space-y-4">
+    <h3 class="text-xl font-semibold text-[var(--primary)]">🌅 Morning Reflections</h3>
 
-        function showRandomReminder(elementId) {
-            const morningReminders = [
-                "Remember to breathe deeply today 🌤️",
-                "Go outside and feel the sun ☀️",
-                "Drink water and take a walk 💧",
-                "Smile at yourself in the mirror 😊",
-                "You’re capable of great things — take it slow 🌱"
-            ];
-            const nightReminders = [
-                "Let go of the day, you did enough 🌙",
-                "Take a deep breath and release your worries 💫",
-                "Stretch and feel your body unwind 💤",
-                "Be kind to yourself — tomorrow is a new day 🌌",
-                "Read or listen to something calming before sleep 🌜"
-            ];
-            const reminders = elementId.includes("morning") ? morningReminders : nightReminders;
-            const chosen = reminders[Math.floor(Math.random() * reminders.length)];
-            document.getElementById(elementId).textContent = chosen;
-        }
+    <label class="font-semibold">Sleep Quality</label>
+    <input type="text" name="sleep_quality" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none">
 
-        window.onload = showSection;
-    </script>
-</head>
-<body>
-    <h1>New Journal Entry</h1>
+    <label class="font-semibold">Sleep Notes</label>
+    <textarea name="sleep_notes" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-    <!-- IMPORTANT: Action set to Flask route -->
-    <form method="POST" action="{{ url_for('new_entry') }}">
-        <label for="title"><b>Title:</b></label>
-        <input type="text" name="title" id="title" placeholder="Give this entry a title (optional)">
-        <label for="journal_type"><b>Journal Type:</b></label>
-        <select name="journal_type" id="journal_type" onchange="showSection()" required>
-            <option value="">-- Select a Journal Type --</option>
-            <option value="Free Write">Free Write</option>
-            <option value="Daily Journal - Morning">Daily Journal - Morning</option>
-            <option value="Daily Journal - Night">Daily Journal - Night</option>
-            <option value="Situational Journal">Situational Journal</option>
-        </select>
+    <label class="font-semibold">Gratitudes</label>
+    <textarea name="gratitudes" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-        <!-- Free Write -->
-        <div id="free_write" class="section" style="display:none;">
-            <h2>Free Write</h2>
-            <textarea name="content" placeholder="Write your thoughts here..."></textarea>
-        </div>
+    <label class="font-semibold">Affirmations</label>
+    <textarea name="affirmations" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-        <!-- Morning Journal -->
-        <div id="morning" class="section" style="display:none;">
-            <h2>Daily Journal - Morning</h2>
-            <label>How was your sleep quality?</label>
-            <input type="text" name="sleep_quality" placeholder="Good / Okay / Bad">
+    <label class="font-semibold">Goals</label>
+    <textarea name="goals" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <label>If bad, why? What did you do before bed?</label>
-            <textarea name="sleep_notes" placeholder="Describe what affected your sleep..."></textarea>
+    <label class="font-semibold">Action Plans</label>
+    <textarea name="actions" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <label>3 Gratitudes:</label>
-            <textarea name="gratitudes" placeholder="What are you grateful for today?"></textarea>
+    <div class="p-4 bg-[var(--bg-light)] rounded-lg text-[var(--secondary)] text-sm font-medium">
+      ☀️ Reminder: <span id="morning_reminder"></span>
+    </div>
 
-            <label>3 Affirmations ("I" statements):</label>
-            <textarea name="affirmations" placeholder="I am strong, I am calm, I am focused..."></textarea>
+    <label class="font-semibold">Free Thoughts</label>
+    <textarea name="morning_freetext" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
+  </div>
 
-            <label>Daily Goal(s):</label>
-            <textarea name="goals" placeholder="What are your main goals for today?"></textarea>
+  <!-- Night Journal -->
+  <div id="night" class="hidden space-y-4">
+    <h3 class="text-xl font-semibold text-[var(--primary)]">🌙 Night Reflections</h3>
 
-            <label>Action Plan(s) for Goal(s):</label>
-            <textarea name="actions" placeholder="Steps you'll take to achieve your goals..."></textarea>
+    <label class="font-semibold">Gratitudes</label>
+    <textarea name="night_gratitudes" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <div class="reminder">
-                <b>☀️ Reminder for a Good Day:</b> <span id="morning_reminder"></span>
-            </div>
+    <label class="font-semibold">Positives</label>
+    <textarea name="positives" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <label>Free-text Entry:</label>
-            <textarea name="morning_freetext" placeholder="Any other reflections or thoughts..."></textarea>
-        </div>
+    <label class="font-semibold">Goal Progress</label>
+    <textarea name="goal_progress" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-        <!-- Night Journal -->
-        <div id="night" class="section" style="display:none;">
-            <h2>Daily Journal - Night</h2>
-            <label>3 Gratitudes from Today:</label>
-            <textarea name="night_gratitudes" placeholder="List three things you’re grateful for tonight..."></textarea>
+    <div class="p-4 bg-[var(--bg-light)] rounded-lg text-[var(--secondary)] text-sm font-medium">
+      🌙 Reminder: <span id="night_reminder"></span>
+    </div>
 
-            <label>3 Positive Actions, Thoughts, or Experiences:</label>
-            <textarea name="positives" placeholder="Moments you’re proud of, happy about, or learned from..."></textarea>
+    <label class="font-semibold">Free Thoughts</label>
+    <textarea name="night_freetext" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
+  </div>
 
-            <label>Daily Goal(s) % Complete and Why:</label>
-            <textarea name="goal_progress" placeholder="How much progress did you make and what affected it?"></textarea>
+  <!-- Situational Journal -->
+  <div id="situational" class="hidden space-y-4">
+    <h3 class="text-xl font-semibold text-[var(--primary)]">🧠 Situational Reflection</h3>
 
-            <div class="reminder">
-                <b>🌙 Reminder for a Good Night:</b> <span id="night_reminder"></span>
-            </div>
+    <label class="font-semibold">Situation</label>
+    <textarea name="situation" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <label>Free-text Entry:</label>
-            <textarea name="night_freetext" placeholder="Any reflections, feelings, or closing thoughts..."></textarea>
-        </div>
+    <label class="font-semibold">Category</label>
+    <select name="situation_category" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none">
+      <option>Interpersonal</option>
+      <option>Intrapersonal</option>
+      <option>Existential</option>
+      <option>Societal</option>
+      <option>Other</option>
+    </select>
 
-        <!-- Situational Journal -->
-        <div id="situational" class="section" style="display:none;">
-            <h2>Situational Journal</h2>
-            <label>Situation / Reasons for Journaling:</label>
-            <textarea name="situation" placeholder="What happened? What triggered your need to journal?"></textarea>
+    <label class="font-semibold">Feelings</label>
+    <textarea name="feelings" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <label>Category:</label>
-            <select name="situation_category">
-                <option value="Interpersonal">Interpersonal</option>
-                <option value="Intrapersonal">Intrapersonal</option>
-                <option value="Existential">Existential</option>
-                <option value="Societal">Societal</option>
-                <option value="Other">Other / General</option>
-            </select>
+    <label class="font-semibold">Used Skills</label>
+    <select name="used_skills" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none">
+      <option>No</option>
+      <option>Yes</option>
+    </select>
 
-            <label>How did this make you feel?</label>
-            <textarea name="feelings" placeholder="Describe your emotions..."></textarea>
+    <label class="font-semibold">Skills Applied</label>
+    <textarea name="skills_used" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
 
-            <label>If negative, did you use skills to help remedy the situation?</label>
-            <select name="used_skills">
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-            </select>
+    <label class="font-semibold">After Effect</label>
+    <textarea name="after_effect" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[var(--primary)] outline-none"></textarea>
+  </div>
 
-            <label>If yes, what skills did you utilize?</label>
-            <textarea name="skills_used" placeholder="e.g., mindfulness, deep breathing, reframing..."></textarea>
+  <!-- Submit -->
+  <button type="submit" class="w-full py-3 rounded-lg text-white font-semibold bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] hover:opacity-90 transition">
+    Save Entry
+  </button>
+</form>
 
-            <label>Did the skills help? How do you feel now?</label>
-            <textarea name="after_effect" placeholder="Reflect on whether it helped and how you feel..."></textarea>
-        </div>
+<div class="text-center mt-6">
+  <a href="{{ url_for('home') }}" class="text-[var(--primary)] hover:text-[var(--secondary)] font-medium">← Back to Home</a>
+</div>
 
-        <button type="submit">Save Entry</button>
-    </form>
-
-    <br>
-    <a href="{{ url_for('home') }}">← Back to Home</a>
-</body>
-</html>
+</main> <script> function showSection() { const journalType = document.getElementById("journal_type").value; const sections = ["free_write", "morning", "night", "situational"]; sections.forEach(id => document.getElementById(id).classList.add("hidden")); if (journalType === "Free Write") document.getElementById("free_write").classList.remove("hidden"); else if (journalType === "Daily Journal - Morning") { document.getElementById("morning").classList.remove("hidden"); showRandomReminder("morning_reminder"); } else if (journalType === "Daily Journal - Night") { document.getElementById("night").classList.remove("hidden"); showRandomReminder("night_reminder"); } else if (journalType === "Situational Journal") document.getElementById("situational").classList.remove("hidden"); } function showRandomReminder(elementId) { const morningReminders = [ "Remember to breathe deeply today 🌤️", "Go outside and feel the sun ☀️", "Drink water and take a walk 💧", "Smile at yourself in the mirror 😊", "You’re capable of great things — take it slow 🌱" ]; const nightReminders = [ "Let go of the day, you did enough 🌙", "Take a deep breath and release your worries 💫", "Stretch and feel your body unwind 💤", "Be kind to yourself — tomorrow is a new day 🌌", "Read or listen to something calming before sleep 🌜" ]; const reminders = elementId.includes("morning") ? morningReminders : nightReminders; const chosen = reminders[Math.floor(Math.random() * reminders.length)]; document.getElementById(elementId).textContent = chosen; } window.onload = showSection; </script> </body> </html>

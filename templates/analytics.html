@@ -1,45 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Journal Analytics</title>
-    <style>
-        body { font-family: Arial; margin: 40px; background-color: #fafafa; }
-        h1 { margin-bottom: 10px; }
-        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 30px; }
-        a { text-decoration: none; color: #007bff; font-weight: bold; }
-        ul { list-style: none; padding: 0; }
-        li { margin-bottom: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Journal Analytics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #4fb6b2;
+      --secondary: #9b8cff;
+      --bg-light: #f8fafc;
+      --text-dark: #2d2f34;
+    }
+  </style>
 </head>
-<body>
-    <nav>
-        <a href="{{ url_for('home') }}">← Back to Home</a>
-    </nav>
+<body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen">
 
-    <h1>📈 Journal Analytics</h1>
+  <!-- Navbar -->
+  <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
+      <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
+      <div class="space-x-6">
+        <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
+        <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a>
+      </div>
+    </div>
+  </nav>
 
-    <div class="section">
-        <h2>Total Entries</h2>
-        <p>{{ total_entries }}</p>
+  <!-- Page Content -->
+  <main class="max-w-4xl mx-auto px-6 py-10">
+    <h2 class="text-3xl font-bold mb-10 text-center text-[var(--secondary)]">📈 Journal Analytics</h2>
+
+    <!-- Total Entries -->
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-8 hover:shadow-lg transition">
+      <h3 class="text-[var(--primary)] text-xl font-semibold mb-2">Total Entries</h3>
+      <p class="text-4xl font-bold text-gray-700">{{ total_entries }}</p>
     </div>
 
-    <div class="section">
-        <h2>Entries by Type</h2>
-        <ul>
+    <!-- Entries by Type -->
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-8 hover:shadow-lg transition">
+      <h3 class="text-[var(--primary)] text-xl font-semibold mb-4">Entries by Type</h3>
+      <ul class="space-y-2">
         {% for journal_type, count in type_counts.items() %}
-            <li>{{ journal_type }} — {{ count }}</li>
+          <li class="flex justify-between border-b border-gray-100 pb-2">
+            <span class="font-medium">{{ journal_type }}</span>
+            <span class="text-gray-500">{{ count }}</span>
+          </li>
         {% endfor %}
-        </ul>
+      </ul>
     </div>
 
-    <div class="section">
-        <h2>Most Common Words</h2>
-        <ul>
+    <!-- Most Common Words -->
+    <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
+      <h3 class="text-[var(--primary)] text-xl font-semibold mb-4">Most Common Words</h3>
+      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-y-2">
         {% for word, freq in common_words %}
-            <li>{{ word }} — {{ freq }}</li>
+          <li class="flex justify-between border-b border-gray-100 pb-1">
+            <span class="font-medium">{{ word }}</span>
+            <span class="text-gray-500">{{ freq }}</span>
+          </li>
         {% endfor %}
-        </ul>
+      </ul>
     </div>
+
+  </main>
+
 </body>
 </html>

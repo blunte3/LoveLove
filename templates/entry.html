@@ -1,148 +1,108 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Journal Entry Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: #fafafa;
-        }
-        .container {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-            max-width: 800px;
-            margin: auto;
-        }
-        h1 { margin-bottom: 10px; }
-        .meta {
-            color: gray;
-            font-size: 0.9em;
-            margin-bottom: 20px;
-        }
-        .section {
-            margin-bottom: 15px;
-            padding: 10px 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        .label {
-            font-weight: bold;
-            color: #444;
-            display: block;
-            margin-bottom: 5px;
-        }
-        .content {
-            white-space: pre-wrap;
-            color: #333;
-        }
-        a {
-            text-decoration: none;
-            color: #007bff;
-        }
-        a:hover { text-decoration: underline; }
-        .emoji-header {
-            font-size: 1.4em;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <a href="{{ url_for('home') }}">← Back to Home</a>
-        <h1>{{ journal_type }}</h1>
-        <div class="meta">{{ date }}</div>
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <title>Journal Entry Details</title> <script src="https://cdn.tailwindcss.com"></script> <style> :root { --primary: #4fb6b2; --secondary: #9b8cff; --bg-light: #f8fafc; --text-dark: #2d2f34; } </style> </head> <body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen"> <main class="max-w-3xl mx-auto py-12 px-6"> <!-- Back Button --> <a href="{{ url_for('home') }}" class="inline-flex items-center text-[var(--primary)] hover:text-[var(--secondary)] transition mb-6"> <span class="text-2xl mr-2">←</span> Back to Home </a>
+<!-- Header -->
+<div class="bg-white rounded-2xl shadow-md p-8 mb-8 text-center">
+  <h1 class="text-3xl font-semibold text-[var(--primary)] mb-2">{{ journal_type }}</h1>
+  <div class="text-gray-500">{{ date }}</div>
+</div>
 
-        {% if journal_type == "Free Write" %}
-            <div class="section">
-                <div class="content">{{ entry_data.content }}</div>
-            </div>
-
-        {% elif journal_type == "Daily Journal - Morning" %}
-            <div class="emoji-header">🌅 Morning Reflections</div>
-            <div class="section">
-                <span class="label">Sleep Quality:</span>
-                <div class="content">{{ entry_data.sleep_quality or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Sleep Notes:</span>
-                <div class="content">{{ entry_data.sleep_notes or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Gratitudes:</span>
-                <div class="content">{{ entry_data.gratitudes or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Affirmations:</span>
-                <div class="content">{{ entry_data.affirmations or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Goals:</span>
-                <div class="content">{{ entry_data.goals or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Action Plans:</span>
-                <div class="content">{{ entry_data.actions or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Free Thoughts:</span>
-                <div class="content">{{ entry_data.morning_freetext or "—" }}</div>
-            </div>
-
-        {% elif journal_type == "Daily Journal - Night" %}
-            <div class="emoji-header">🌙 Night Reflections</div>
-            <div class="section">
-                <span class="label">Gratitudes:</span>
-                <div class="content">{{ entry_data.night_gratitudes or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Positives:</span>
-                <div class="content">{{ entry_data.positives or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Goal Progress:</span>
-                <div class="content">{{ entry_data.goal_progress or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Free Thoughts:</span>
-                <div class="content">{{ entry_data.night_freetext or "—" }}</div>
-            </div>
-
-        {% elif journal_type == "Situational Journal" %}
-            <div class="emoji-header">🧠 Situation Reflection</div>
-            <div class="section">
-                <span class="label">Situation:</span>
-                <div class="content">{{ entry_data.situation or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Category:</span>
-                <div class="content">{{ entry_data.situation_category or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Feelings:</span>
-                <div class="content">{{ entry_data.feelings or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Used Skills:</span>
-                <div class="content">{{ entry_data.used_skills or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">Skills Applied:</span>
-                <div class="content">{{ entry_data.skills_used or "—" }}</div>
-            </div>
-            <div class="section">
-                <span class="label">After Effect:</span>
-                <div class="content">{{ entry_data.after_effect or "—" }}</div>
-            </div>
-
-        {% else %}
-            <div class="section">
-                <div class="content">{{ entry_data.content or content }}</div>
-            </div>
-        {% endif %}
+<!-- Entry Content -->
+<div class="space-y-6">
+  {% if journal_type == "Free Write" %}
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+      <div class="whitespace-pre-wrap text-gray-700">{{ entry_data.content }}</div>
     </div>
-</body>
-</html>
+
+  {% elif journal_type == "Daily Journal - Morning" %}
+    <h2 class="text-2xl font-semibold text-center text-[var(--secondary)] mb-4">🌅 Morning Reflections</h2>
+
+    <div class="space-y-4">
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Sleep Quality</div>
+        <div class="text-gray-700">{{ entry_data.sleep_quality or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Sleep Notes</div>
+        <div class="text-gray-700">{{ entry_data.sleep_notes or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Gratitudes</div>
+        <div class="text-gray-700">{{ entry_data.gratitudes or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Affirmations</div>
+        <div class="text-gray-700">{{ entry_data.affirmations or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Goals</div>
+        <div class="text-gray-700">{{ entry_data.goals or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Action Plans</div>
+        <div class="text-gray-700">{{ entry_data.actions or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Free Thoughts</div>
+        <div class="text-gray-700">{{ entry_data.morning_freetext or "—" }}</div>
+      </div>
+    </div>
+
+  {% elif journal_type == "Daily Journal - Night" %}
+    <h2 class="text-2xl font-semibold text-center text-[var(--secondary)] mb-4">🌙 Night Reflections</h2>
+
+    <div class="space-y-4">
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Gratitudes</div>
+        <div class="text-gray-700">{{ entry_data.night_gratitudes or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Positives</div>
+        <div class="text-gray-700">{{ entry_data.positives or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Goal Progress</div>
+        <div class="text-gray-700">{{ entry_data.goal_progress or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Free Thoughts</div>
+        <div class="text-gray-700">{{ entry_data.night_freetext or "—" }}</div>
+      </div>
+    </div>
+
+  {% elif journal_type == "Situational Journal" %}
+    <h2 class="text-2xl font-semibold text-center text-[var(--secondary)] mb-4">🧠 Situation Reflection</h2>
+
+    <div class="space-y-4">
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Situation</div>
+        <div class="text-gray-700">{{ entry_data.situation or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Category</div>
+        <div class="text-gray-700">{{ entry_data.situation_category or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Feelings</div>
+        <div class="text-gray-700">{{ entry_data.feelings or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Used Skills</div>
+        <div class="text-gray-700">{{ entry_data.used_skills or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">Skills Applied</div>
+        <div class="text-gray-700">{{ entry_data.skills_used or "—" }}</div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm">
+        <div class="font-semibold text-gray-600 mb-1">After Effect</div>
+        <div class="text-gray-700">{{ entry_data.after_effect or "—" }}</div>
+      </div>
+    </div>
+
+  {% else %}
+    <div class="bg-white p-6 rounded-2xl shadow-sm">
+      <div class="whitespace-pre-wrap text-gray-700">{{ entry_data.content or content }}</div>
+    </div>
+  {% endif %}
+</div>
+
+</main> </body> </html>
