@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Journal Analytics</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
       --primary: #4fb6b2;
@@ -26,43 +27,129 @@
     </div>
   </nav>
 
-  <!-- Page Content -->
-  <main class="max-w-4xl mx-auto px-6 py-10">
-    <h2 class="text-3xl font-bold mb-10 text-center text-[var(--secondary)]">📈 Journal Analytics</h2>
+  <!-- Content -->
+  <main class="max-w-5xl mx-auto px-6 py-10">
+    <h2 class="text-3xl font-bold mb-10 text-center text-[var(--secondary)]">📈 Journal Analytics Dashboard</h2>
 
-    <!-- Total Entries -->
-    <div class="bg-white rounded-2xl shadow-md p-6 mb-8 hover:shadow-lg transition">
-      <h3 class="text-[var(--primary)] text-xl font-semibold mb-2">Total Entries</h3>
-      <p class="text-4xl font-bold text-gray-700">{{ total_entries }}</p>
+    <!-- Quick Insights -->
+    <div class="grid sm:grid-cols-3 gap-6 mb-10">
+      <div class="bg-white rounded-2xl shadow-md p-6 text-center">
+        <p class="text-gray-500 text-sm mb-1">Total Entries</p>
+        <p class="text-4xl font-bold text-[var(--primary)]">{{ total_entries }}</p>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 text-center">
+        <p class="text-gray-500 text-sm mb-1">Most Frequent Type</p>
+        <p class="text-2xl font-semibold text-[var(--secondary)]">
+        {% if type_counts %}
+            {% set sorted_types = type_counts|dictsort(true, by='value') %}
+            {{ sorted_types[0][0] }}
+        {% else %}
+            N/A
+        {% endif %}
+        </p>
+
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-6 text-center">
+        <p class="text-gray-500 text-sm mb-1">Most Common Word</p>
+        <p class="text-2xl font-semibold text-[var(--primary)]">
+          {% if common_words %}{{ common_words[0][0] }}{% else %}N/A{% endif %}
+        </p>
+      </div>
     </div>
 
-    <!-- Entries by Type -->
-    <div class="bg-white rounded-2xl shadow-md p-6 mb-8 hover:shadow-lg transition">
-      <h3 class="text-[var(--primary)] text-xl font-semibold mb-4">Entries by Type</h3>
-      <ul class="space-y-2">
-        {% for journal_type, count in type_counts.items() %}
-          <li class="flex justify-between border-b border-gray-100 pb-2">
-            <span class="font-medium">{{ journal_type }}</span>
-            <span class="text-gray-500">{{ count }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
+    <!-- Charts Section -->
+    <div class="space-y-10">
+      <!-- Entries by Type Chart -->
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h3 class="text-xl font-semibold text-[var(--primary)] mb-4">Entries by Type</h3>
+        <canvas id="entriesByTypeChart" height="120"></canvas>
+      </div>
 
-    <!-- Most Common Words -->
-    <div class="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition">
-      <h3 class="text-[var(--primary)] text-xl font-semibold mb-4">Most Common Words</h3>
-      <ul class="grid grid-cols-2 sm:grid-cols-3 gap-y-2">
-        {% for word, freq in common_words %}
-          <li class="flex justify-between border-b border-gray-100 pb-1">
-            <span class="font-medium">{{ word }}</span>
-            <span class="text-gray-500">{{ freq }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
+      <!-- Weekly Writing Frequency -->
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h3 class="text-xl font-semibold text-[var(--primary)] mb-4">Weekly Writing Frequency</h3>
+        <canvas id="weeklyChart" height="120"></canvas>
+      </div>
 
+      <!-- Common Words Chart -->
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h3 class="text-xl font-semibold text-[var(--primary)] mb-4">Top 10 Most Common Words</h3>
+        <canvas id="commonWordsChart" height="120"></canvas>
+      </div>
+    </div>
   </main>
+
+  <script>
+    // Tailwind calm palette
+    const primary = '#4fb6b2';
+    const secondary = '#9b8cff';
+    const accent = '#86efac';
+
+    // Data passed from Flask
+    const typeCounts = {{ type_counts | tojson }};
+    const commonWords = {{ common_words | tojson }};
+    const weeklyCounts = {{ weekly_counts | tojson if weekly_counts is defined else '{}' }};
+
+    // Entries by Type Chart
+    const ctx1 = document.getElementById('entriesByTypeChart').getContext('2d');
+    new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(typeCounts),
+        datasets: [{
+          data: Object.values(typeCounts),
+          backgroundColor: [primary, secondary, accent, '#fbbf24'],
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+
+    // Weekly Writing Frequency Chart
+    const ctx2 = document.getElementById('weeklyChart').getContext('2d');
+    new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: Object.keys(weeklyCounts),
+        datasets: [{
+          label: 'Entries per Day',
+          data: Object.values(weeklyCounts),
+          borderColor: secondary,
+          backgroundColor: secondary + '20',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Most Common Words Chart
+    const ctx3 = document.getElementById('commonWordsChart').getContext('2d');
+    new Chart(ctx3, {
+      type: 'bar',
+      data: {
+        labels: commonWords.slice(0, 10).map(w => w[0]),
+        datasets: [{
+          label: 'Frequency',
+          data: commonWords.slice(0, 10).map(w => w[1]),
+          backgroundColor: primary + '80',
+          borderColor: primary,
+          borderWidth: 1.5,
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true } },
+        plugins: { legend: { display: false } }
+      }
+    });
+  </script>
 
 </body>
 </html>
