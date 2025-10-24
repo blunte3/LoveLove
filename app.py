@@ -126,5 +126,65 @@ def view_entry(entry_id):
 
     return render_template("entry.html", date=date, journal_type=journal_type, entry_data=entry_data, content=content)
 
+@app.route('/skills')
+def skills():
+    skills_data = {
+        "Distress Tolerance": [
+            {
+                "name": "Grounding",
+                "definition": "Using your five senses to reconnect with the present moment.",
+                "how_to": "Focus on 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste.",
+                "tags": ["mindfulness", "distress", "grounding"]
+            },
+            {
+                "name": "Radical Acceptance",
+                "definition": "Accepting reality fully, even when it’s painful, to reduce suffering.",
+                "how_to": "Remind yourself that reality cannot be changed by resistance. Say: 'It is what it is, and I can handle it.'",
+                "tags": ["acceptance", "DBT", "distress"]
+            },
+            {
+                "name": "Mindfulness",
+                "definition": "Paying attention to the present moment without judgment.",
+                "how_to": "Notice your breath, sensations, and thoughts gently without labeling them as good or bad.",
+                "tags": ["mindfulness", "calm", "CBT"]
+            },
+            {
+                "name": "Exercise",
+                "definition": "Moving your body to release tension and improve emotional state.",
+                "how_to": "Try stretching, yoga, or a walk outside — even 10 minutes can shift your mood.",
+                "tags": ["exercise", "stress-relief", "distress"]
+            }
+        ],
+        "Cognitive & Emotional Growth": [
+            {
+                "name": "Cognitive Reframing",
+                "definition": "Changing how you interpret events to see them more realistically or positively.",
+                "how_to": "Challenge negative thoughts by asking: 'What’s another way to look at this?'",
+                "tags": ["CBT", "reframing", "thoughts"]
+            },
+            {
+                "name": "Self-Compassion",
+                "definition": "Treating yourself with the same kindness you’d offer a friend.",
+                "how_to": "Say: 'It’s okay to struggle. I’m doing my best, and that’s enough.'",
+                "tags": ["self-care", "compassion", "emotional-growth"]
+            }
+        ],
+        "Interpersonal & Communication": [
+            {
+                "name": "DEAR MAN",
+                "definition": "A DBT skill for assertive communication to get your needs met.",
+                "how_to": "Describe, Express, Assert, Reinforce, stay Mindful, Appear confident, Negotiate.",
+                "tags": ["DBT", "communication", "assertiveness"]
+            },
+            {
+                "name": "Active Listening",
+                "definition": "Fully focusing on what someone is saying rather than preparing your reply.",
+                "how_to": "Listen, nod, summarize what they said, and avoid interrupting.",
+                "tags": ["communication", "mindfulness", "relationships"]
+            }
+        ]
+    }
+    return render_template("skills.html", skills_data=skills_data)
+
 if __name__ == "__main__":
     app.run(debug=True)

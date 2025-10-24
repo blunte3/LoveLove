@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Skills Database</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --primary: #4fb6b2;
+      --secondary: #9b8cff;
+      --bg-light: #f8fafc;
+      --text-dark: #2d2f34;
+    }
+  </style>
+</head>
+<body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen">
+
+  <!-- Navbar -->
+  <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
+    <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
+      <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
+      <div class="space-x-6">
+        <a href="{{ url_for('home') }}" class="hover:text-[var(--primary)] font-medium">Home</a>
+        <a href="{{ url_for('analytics') }}" class="hover:text-[var(--primary)] font-medium">Analytics</a>
+        <a href="{{ url_for('skills') }}" class="text-[var(--primary)] font-medium">Skills</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="max-w-4xl mx-auto px-6 py-10">
+    <h2 class="text-3xl font-bold text-center mb-6 text-[var(--secondary)]">🧘 Skills & Techniques</h2>
+    <p class="text-center text-gray-500 mb-10">Search or browse through CBT, DBT, and mindfulness skills.</p>
+
+    <!-- Search -->
+    <div class="flex justify-center mb-10">
+      <input id="searchBar" type="text" placeholder="Search skills or tags..."
+             class="w-full md:w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition">
+    </div>
+
+    {% for category, skills in skills_data.items() %}
+      <section class="mb-10 skill-category">
+        <h3 class="text-2xl font-semibold text-[var(--primary)] mb-4">{{ category }}</h3>
+
+        <div class="space-y-4">
+          {% for skill in skills %}
+            <div class="skill-card bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition"
+                 data-name="{{ skill.name | lower }}"
+                 data-tags="{{ ' '.join(skill.tags) | lower }}">
+              <h4 class="font-semibold text-lg text-[var(--text-dark)]">{{ skill.name }}</h4>
+              <div class="mt-2 mb-2 flex flex-wrap gap-2">
+                {% for tag in skill.tags %}
+                  <span class="text-xs bg-[var(--secondary)]/10 text-[var(--secondary)] px-2 py-1 rounded-full">#{{ tag }}</span>
+                {% endfor %}
+              </div>
+              <p class="text-gray-600"><span class="font-medium text-[var(--primary)]">Definition:</span> {{ skill.definition }}</p>
+              <p class="text-gray-600 mt-1"><span class="font-medium text-[var(--primary)]">How to Practice:</span> {{ skill.how_to }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  </main>
+
+  <!-- Search Filtering Script -->
+  <script>
+    const searchBar = document.getElementById("searchBar");
+    const skillCards = document.querySelectorAll(".skill-card");
+
+    searchBar.addEventListener("input", () => {
+      const query = searchBar.value.toLowerCase();
+
+      skillCards.forEach(card => {
+        const name = card.dataset.name;
+        const tags = card.dataset.tags;
+
+        if (name.includes(query) || tags.includes(query)) {
+          card.classList.remove("hidden");
+          card.classList.add("opacity-100");
+        } else {
+          card.classList.add("hidden");
+          card.classList.remove("opacity-100");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
