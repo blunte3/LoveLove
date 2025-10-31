@@ -147,30 +147,91 @@ def new_entry():
 def analytics():
     conn = sqlite3.connect("journal.db")
     c = conn.cursor()
-    c.execute("SELECT journal_type, content FROM entries")
+    c.execute("SELECT date, journal_type, content FROM entries")
     rows = c.fetchall()
     conn.close()
 
     total_entries = len(rows)
+
+    # --- 1. Entry Type Counts ---
     type_counts = {}
-    for journal_type, _ in rows:
+    for _, journal_type, _ in rows:
         type_counts[journal_type] = type_counts.get(journal_type, 0) + 1
 
+    # --- 2. Combine all text for common words ---
     all_text = ""
-    for _, content in rows:
+    for _, _, content in rows:
         try:
             content_dict = json.loads(content)
             all_text += " ".join(content_dict.values()) + " "
         except:
             all_text += content + " "
-
     words = re.findall(r'\b[a-z]{3,}\b', all_text.lower())
-    common_words = Counter(words).most_common(10)
+    common_words = Counter(words).most_common(20)
 
-    return render_template("analytics.html",
-                           total_entries=total_entries,
-                           type_counts=type_counts,
-                           common_words=common_words)
+    # --- 3. Weekly Writing Frequency (entries per weekday) ---
+    weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    weekly_counts = {d: 0 for d in weekdays}
+    for date_str, _, _ in rows:
+        try:
+            dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            weekly_counts[dt.strftime("%a")] += 1
+        except:
+            pass
+
+    # --- 4. Sentiment Trend (dummy data for now) ---
+    # In future, compute this using a sentiment analysis library (e.g., TextBlob or VADER)
+    sentiment_trend = {}
+    for i, (date_str, _, content) in enumerate(rows[-10:]):  # last 10 entries
+        sentiment_trend[date_str.split(" ")[0]] = (i % 5 - 2) / 2  # dummy sentiment between -1 and +1
+
+    # --- 5. Emotion Distribution (placeholder data) ---
+    # Replace with your emotion detection logic if you have one
+    emotion_counts = {
+        "Joy": 10,
+        "Sadness": 5,
+        "Anger": 3,
+        "Fear": 4,
+        "Surprise": 2,
+        "Neutral": 8
+    }
+
+    # --- 6. Words by Day of Week (average word count) ---
+    words_by_day = {d: 0 for d in weekdays}
+    counts_by_day = {d: 0 for d in weekdays}
+
+    for date_str, _, content in rows:
+        try:
+            dt = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            weekday = dt.strftime("%a")
+            try:
+                content_dict = json.loads(content)
+                text = " ".join(content_dict.values())
+            except:
+                text = content
+            word_count = len(re.findall(r'\b[a-z]{3,}\b', text.lower()))
+            words_by_day[weekday] += word_count
+            counts_by_day[weekday] += 1
+        except:
+            continue
+
+    # Avoid divide by zero
+    for day in words_by_day:
+        if counts_by_day[day] > 0:
+            words_by_day[day] = round(words_by_day[day] / counts_by_day[day], 1)
+
+    # --- 7. Render Template ---
+    return render_template(
+        "analytics.html",
+        total_entries=total_entries,
+        type_counts=type_counts,
+        common_words=common_words,
+        weekly_counts=weekly_counts,
+        sentiment_trend=sentiment_trend,
+        emotion_counts=emotion_counts,
+        words_by_day=words_by_day
+    )
+
 
 @app.route("/entry/<int:entry_id>")
 def view_entry(entry_id):
