@@ -9,6 +9,7 @@
     :root {
       --primary: #4fb6b2;
       --secondary: #9b8cff;
+      --accent: #86efac;
       --bg-light: #f8fafc;
       --text-dark: #2d2f34;
     }
@@ -18,19 +19,18 @@
 
   <!-- Navbar -->
   <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
-  <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
-    <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
-    <div class="space-x-6">
-    <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
-    <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a>
-    <a href="{{ url_for('skills') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Skills</a>
+    <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
+      <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
+      <div class="space-x-6">
+        <a href="{{ url_for('home') }}" class="hover:text-[var(--primary)] font-medium">Home</a>
+        <a href="{{ url_for('analytics') }}" class="text-[var(--primary)] font-semibold">Analytics</a>
+        <a href="{{ url_for('skills') }}" class="hover:text-[var(--primary)] font-medium">Skills</a>
+      </div>
     </div>
-  </div>
   </nav>
 
-
   <!-- Content -->
-  <main class="max-w-5xl mx-auto px-6 py-10">
+  <main class="max-w-6xl mx-auto px-6 py-10">
     <h2 class="text-3xl font-bold mb-10 text-center text-[var(--secondary)]">📈 Journal Analytics Dashboard</h2>
 
     <!-- Quick Insights -->
@@ -43,14 +43,11 @@
       <div class="bg-white rounded-2xl shadow-md p-6 text-center">
         <p class="text-gray-500 text-sm mb-1">Most Frequent Type</p>
         <p class="text-2xl font-semibold text-[var(--secondary)]">
-        {% if type_counts %}
+          {% if type_counts %}
             {% set sorted_types = type_counts|dictsort(true, by='value') %}
             {{ sorted_types[0][0] }}
-        {% else %}
-            N/A
-        {% endif %}
+          {% else %} N/A {% endif %}
         </p>
-
       </div>
 
       <div class="bg-white rounded-2xl shadow-md p-6 text-center">
@@ -63,57 +60,77 @@
 
     <!-- Charts Section -->
     <div class="space-y-10">
-      <!-- Entries by Type Chart -->
+
+      <!-- Entries by Type -->
       <div class="bg-white rounded-2xl shadow-md p-6">
         <h3 class="text-xl font-semibold text-[var(--primary)] mb-4">Entries by Type</h3>
         <canvas id="entriesByTypeChart" height="120"></canvas>
       </div>
 
-      <!-- Weekly Writing Frequency -->
+      <!-- Weekly Frequency -->
       <div class="bg-white rounded-2xl shadow-md p-6">
         <h3 class="text-xl font-semibold text-[var(--primary)] mb-4">Weekly Writing Frequency</h3>
         <canvas id="weeklyChart" height="120"></canvas>
       </div>
 
-      <!-- Common Words Chart -->
+      <!-- Most Common Words -->
       <div class="bg-white rounded-2xl shadow-md p-6">
         <h3 class="text-xl font-semibold text-[var(--primary)] mb-4">Top 10 Most Common Words</h3>
         <canvas id="commonWordsChart" height="120"></canvas>
       </div>
+
+      <!-- Mood Trend -->
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h3 class="text-xl font-semibold text-[var(--secondary)] mb-4">Average Sentiment Over Time</h3>
+        <canvas id="moodTrendChart" height="120"></canvas>
+      </div>
+
+      <!-- Emotion Distribution -->
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h3 class="text-xl font-semibold text-[var(--secondary)] mb-4">Emotion Distribution</h3>
+        <canvas id="emotionChart" height="120"></canvas>
+      </div>
+
+      <!-- Writing Time Insights -->
+      <div class="bg-white rounded-2xl shadow-md p-6">
+        <h3 class="text-xl font-semibold text-[var(--secondary)] mb-4">Average Words by Day of Week</h3>
+        <canvas id="wordsByDayChart" height="120"></canvas>
+      </div>
+
     </div>
   </main>
 
   <script>
-    // Tailwind calm palette
+    // Palette
     const primary = '#4fb6b2';
     const secondary = '#9b8cff';
     const accent = '#86efac';
+    const gold = '#fbbf24';
 
     // Data passed from Flask
     const typeCounts = {{ type_counts | tojson }};
     const commonWords = {{ common_words | tojson }};
     const weeklyCounts = {{ weekly_counts | tojson if weekly_counts is defined else '{}' }};
+    const sentimentTrend = {{ sentiment_trend | tojson if sentiment_trend is defined else '{}' }};
+    const emotionCounts = {{ emotion_counts | tojson if emotion_counts is defined else '{}' }};
+    const wordsByDay = {{ words_by_day | tojson if words_by_day is defined else '{}' }};
 
-    // Entries by Type Chart
-    const ctx1 = document.getElementById('entriesByTypeChart').getContext('2d');
-    new Chart(ctx1, {
+    // Entries by Type
+    new Chart(document.getElementById('entriesByTypeChart'), {
       type: 'doughnut',
       data: {
         labels: Object.keys(typeCounts),
         datasets: [{
           data: Object.values(typeCounts),
-          backgroundColor: [primary, secondary, accent, '#fbbf24'],
-          borderWidth: 2,
+          backgroundColor: [primary, secondary, accent, gold],
+          borderWidth: 2
         }]
       },
-      options: {
-        plugins: { legend: { position: 'bottom' } }
-      }
+      options: { plugins: { legend: { position: 'bottom' } } }
     });
 
-    // Weekly Writing Frequency Chart
-    const ctx2 = document.getElementById('weeklyChart').getContext('2d');
-    new Chart(ctx2, {
+    // Weekly Writing Frequency
+    new Chart(document.getElementById('weeklyChart'), {
       type: 'line',
       data: {
         labels: Object.keys(weeklyCounts),
@@ -122,7 +139,7 @@
           data: Object.values(weeklyCounts),
           borderColor: secondary,
           backgroundColor: secondary + '20',
-          tension: 0.3,
+          tension: 0.4,
           fill: true
         }]
       },
@@ -132,9 +149,8 @@
       }
     });
 
-    // Most Common Words Chart
-    const ctx3 = document.getElementById('commonWordsChart').getContext('2d');
-    new Chart(ctx3, {
+    // Common Words
+    new Chart(document.getElementById('commonWordsChart'), {
       type: 'bar',
       data: {
         labels: commonWords.slice(0, 10).map(w => w[0]),
@@ -143,7 +159,66 @@
           data: commonWords.slice(0, 10).map(w => w[1]),
           backgroundColor: primary + '80',
           borderColor: primary,
-          borderWidth: 1.5,
+          borderWidth: 1.5
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Sentiment Trend (Average mood per day)
+    new Chart(document.getElementById('moodTrendChart'), {
+      type: 'line',
+      data: {
+        labels: Object.keys(sentimentTrend),
+        datasets: [{
+          label: 'Average Sentiment',
+          data: Object.values(sentimentTrend),
+          borderColor: primary,
+          backgroundColor: primary + '30',
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        scales: { y: { min: -1, max: 1, title: { display: true, text: 'Sentiment Score' } } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Emotion Distribution (Radar chart)
+    new Chart(document.getElementById('emotionChart'), {
+      type: 'radar',
+      data: {
+        labels: Object.keys(emotionCounts),
+        datasets: [{
+          label: 'Emotions',
+          data: Object.values(emotionCounts),
+          backgroundColor: secondary + '30',
+          borderColor: secondary,
+          pointBackgroundColor: secondary
+        }]
+      },
+      options: {
+        scales: { r: { beginAtZero: true } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Average Words by Day of Week
+    new Chart(document.getElementById('wordsByDayChart'), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(wordsByDay),
+        datasets: [{
+          label: 'Average Word Count',
+          data: Object.values(wordsByDay),
+          backgroundColor: accent + '80',
+          borderColor: accent,
+          borderWidth: 1.5
         }]
       },
       options: {
