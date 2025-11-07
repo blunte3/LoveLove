@@ -7,68 +7,71 @@ import re
 
 app = Flask(__name__)
 
-# ----- SKILL DATABASE -----
 skills_db = {
-    "Mindfulness": {
-        "category": "Distress Tolerance",
-        "definition": "Mindfulness is the practice of being fully present and aware of your thoughts, feelings, and surroundings without judgment.",
-        "how_to": [
-            "Sit or lie down comfortably.",
-            "Focus on your breath — the inhale and exhale.",
-            "Notice sensations in your body.",
-            "When your mind wanders, gently return to your breath."
-        ],
-        "enhancements": {
-            "guided_breathing": True,
-            "reflection": True,
-            "related": ["Grounding", "Radical Acceptance"]
-        }
-    },
     "Grounding": {
         "category": "Distress Tolerance",
-        "definition": "Grounding techniques bring your focus to the present moment to help reduce anxiety, panic, or dissociation.",
-        "how_to": [
-            "Name 5 things you can see.",
-            "Name 4 things you can touch.",
-            "Name 3 things you can hear.",
-            "Name 2 things you can smell.",
-            "Name 1 thing you can taste."
+        "definition": "A technique to help you stay present by focusing on physical sensations or immediate surroundings.",
+        "steps": [
+            "Notice 5 things you can see.",
+            "Notice 4 things you can touch.",
+            "Notice 3 things you can hear.",
+            "Notice 2 things you can smell.",
+            "Notice 1 thing you can taste."
         ],
-        "enhancements": {
-            "guided_breathing": False,
-            "reflection": True,
-            "related": ["Mindfulness", "Deep Breathing"]
-        }
+        "enhancement": "breathe"
     },
-    "Cognitive Reframing": {
-        "category": "Cognitive Skills",
-        "definition": "Reframing is changing how you think about a situation to view it from a more balanced and positive perspective.",
-        "how_to": [
-            "Identify a stressful thought or belief.",
-            "Ask: Is this 100% true? What are other possible perspectives?",
-            "Replace the thought with a more realistic, helpful one.",
-            "Reflect on how this changes how you feel."
+    "Mindfulness": {
+        "category": "Mindfulness",
+        "definition": "Being aware of the present moment without judgment.",
+        "steps": [
+            "Focus on your breathing.",
+            "Notice when your mind wanders.",
+            "Gently bring your focus back to the breath."
         ],
-        "enhancements": {
-            "guided_breathing": False,
-            "reflection": True,
-            "related": ["Self Compassion", "Cognitive Distortions"]
-        }
+        "enhancement": "reflection"
     },
     "Radical Acceptance": {
-        "category": "Emotion Regulation",
-        "definition": "Radical acceptance means fully accepting reality as it is — not fighting against what you cannot change.",
-        "how_to": [
-            "Acknowledge your pain and discomfort.",
-            "Remind yourself that reality cannot be changed by denial.",
-            "Say to yourself: 'It is what it is, even if I don’t like it.'",
-            "Focus your energy on what you can control next."
+        "category": "Distress Tolerance",
+        "definition": "Accepting reality as it is — even when painful — without trying to fight it.",
+        "steps": [
+            "Acknowledge the situation.",
+            "Recognize what you can and can’t control.",
+            "Choose acceptance rather than resistance."
         ],
-        "enhancements": {
-            "guided_breathing": True,
-            "reflection": True,
-            "related": ["Mindfulness", "Acceptance and Commitment"]
-        }
+        "enhancement": "audio"
+    },
+    "Reframing": {
+        "category": "Goals & Values",
+        "definition": "Changing your perspective on a situation to view it in a more constructive way.",
+        "steps": [
+            "Identify the negative thought.",
+            "Ask: 'Is this 100% true?'",
+            "Replace it with a more balanced thought."
+        ],
+        "enhancement": "reflection"
+    },
+    # ---- NEW SKILLS ----
+    "Cognitive Reframing": {
+        "category": "Cognitive Techniques",
+        "definition": "Helps identify unhelpful thoughts and reinterpret them in a more balanced, realistic way to reduce stress or anxiety.",
+        "steps": [
+            "Notice a negative thought or assumption.",
+            "Ask: 'Is this thought entirely accurate?'",
+            "Reframe it into a more neutral or positive statement.",
+            "Reflect on how this changes your emotions."
+        ],
+        "enhancement": "reflection"
+    },
+    "Progressive Muscle Relaxation": {
+        "category": "Stress Management",
+        "definition": "A relaxation technique that involves tensing and relaxing muscle groups one at a time to reduce physical tension and promote calm.",
+        "steps": [
+            "Find a quiet space and get comfortable.",
+            "Tense a specific muscle group for about 5 seconds.",
+            "Release the tension and focus on the feeling of relaxation.",
+            "Move progressively through your body."
+        ],
+        "enhancement": "audio"
     }
 }
 
@@ -254,52 +257,8 @@ def view_entry(entry_id):
 
 @app.route("/skills")
 def skills():
-    skills_db = {
-        "Grounding": {
-            "category": "Distress Tolerance",
-            "definition": "A technique to help you stay present by focusing on physical sensations or immediate surroundings.",
-            "steps": [
-                "Notice 5 things you can see.",
-                "Notice 4 things you can touch.",
-                "Notice 3 things you can hear.",
-                "Notice 2 things you can smell.",
-                "Notice 1 thing you can taste."
-            ],
-            "enhancement": "breathe"
-        },
-        "Mindfulness": {
-            "category": "Mindfulness",
-            "definition": "Being aware of the present moment without judgment.",
-            "steps": [
-                "Focus on your breathing.",
-                "Notice when your mind wanders.",
-                "Gently bring your focus back to the breath."
-            ],
-            "enhancement": "reflection"
-        },
-        "Radical Acceptance": {
-            "category": "Distress Tolerance",
-            "definition": "Accepting reality as it is — even when painful — without trying to fight it.",
-            "steps": [
-                "Acknowledge the situation.",
-                "Recognize what you can and can’t control.",
-                "Choose acceptance rather than resistance."
-            ],
-            "enhancement": "audio"
-        },
-        "Reframing": {
-            "category": "Goals & Values",
-            "definition": "Changing your perspective on a situation to view it in a more constructive way.",
-            "steps": [
-                "Identify the negative thought.",
-                "Ask: 'Is this 100% true?'",
-                "Replace it with a more balanced thought."
-            ],
-            "enhancement": "reflection"
-        }
-    }
-
     return render_template("skills.html", skills=skills_db)
+
 
 @app.route("/skill/<name>")
 def skill_detail(name):

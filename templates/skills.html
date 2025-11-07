@@ -63,6 +63,48 @@
         {% endif %}
       </div>
     {% endfor %}
+
+    <!-- New Skills (example for direct addition if not using Jinja) -->
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
+      <h3 class="text-2xl font-semibold text-[var(--primary)] mb-2">Cognitive Reframing</h3>
+      <p class="text-gray-700 mb-4">
+        Cognitive Reframing helps you identify unhelpful thoughts and reinterpret them in a more balanced, realistic way to reduce stress or anxiety.
+      </p>
+      <div class="mb-4">
+        <h4 class="font-semibold text-gray-600 mb-2">How to Practice:</h4>
+        <ul class="list-disc pl-5 space-y-1 text-gray-700">
+          <li>Notice a negative thought or assumption.</li>
+          <li>Ask: “Is this 100% true? What evidence do I have?”</li>
+          <li>Reframe it into a more neutral or positive statement.</li>
+          <li>Reflect on how the new thought changes your mood.</li>
+        </ul>
+      </div>
+      <div class="mt-4">
+        <label class="block font-medium text-gray-600 mb-1">Reflection:</label>
+        <textarea class="w-full border rounded-md p-3 text-gray-700" rows="3" placeholder="Try reframing one recent thought..."></textarea>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
+      <h3 class="text-2xl font-semibold text-[var(--primary)] mb-2">Progressive Muscle Relaxation</h3>
+      <p class="text-gray-700 mb-4">
+        This relaxation technique involves tensing and relaxing muscle groups one at a time to reduce physical tension and promote calm.
+      </p>
+      <div class="mb-4">
+        <h4 class="font-semibold text-gray-600 mb-2">How to Practice:</h4>
+        <ul class="list-disc pl-5 space-y-1 text-gray-700">
+          <li>Sit or lie comfortably in a quiet place.</li>
+          <li>Tense a muscle group (like your fists) for 5 seconds.</li>
+          <li>Slowly release and focus on the feeling of relaxation.</li>
+          <li>Move progressively through your body.</li>
+        </ul>
+      </div>
+      <div class="mt-4">
+        <button onclick="alert('Playing relaxation guide...')" class="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white px-4 py-2 rounded-md shadow-md hover:scale-105 transition">
+          🎧 Play Audio Guide
+        </button>
+      </div>
+    </div>
   </main>
 
   <script>
