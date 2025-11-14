@@ -12,52 +12,108 @@
       --bg-light: #f8fafc;
       --text-dark: #2d2f34;
     }
+    .star-on { color: #f6c244; }
+    .star-off { color: #c6c6c6; }
   </style>
 </head>
+
 <body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen">
   <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
     <div class="max-w-4xl mx-auto flex justify-between items-center py-4 px-6">
       <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
       <div class="space-x-6">
-        <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
-        <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a>
-        <a href="{{ url_for('skills') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Skills</a>
+        <a href="{{ url_for('home') }}" class="hover:text-[var(--primary)]">Home</a>
+        <a href="{{ url_for('analytics') }}" class="hover:text-[var(--primary)]">Analytics</a>
+        <a href="{{ url_for('skills') }}" class="hover:text-[var(--primary)]">Skills</a>
       </div>
     </div>
   </nav>
 
   <main class="max-w-3xl mx-auto px-4 py-10">
-    <h1 class="text-4xl font-bold text-center mb-2 text-[var(--secondary)]">{{ skill.name }}</h1>
-    <p class="text-center text-gray-500 font-medium mb-6">{{ skill.category }}</p>
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h1 class="text-4xl font-bold text-[var(--secondary)]">{{ skill.name }}</h1>
+        <p class="text-sm text-gray-500">{{ skill.category }}</p>
+      </div>
+
+      <!-- Favorite toggle -->
+      <button id="favoriteBtn" class="p-2 rounded-full" title="Toggle favorite">
+        <svg id="favoriteIcon" class="w-8 h-8 star-off" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 17.27L18.18 21L16.545 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.455 13.97L5.82 21L12 17.27Z"/>
+        </svg>
+      </button>
+    </div>
 
     <div class="flex justify-center gap-2 mb-6">
       {% for t in skill.tags %}
-        <span class="px-3 py-1 rounded-full bg-[var(--secondary)]/10 text-[var(--secondary)] text-sm">{{ t }}</span>
+        <span class="px-3 py-1 rounded-full bg-[var(--secondary)]/10 text-[var(--secondary)] text-sm">
+          {{ t }}
+        </span>
       {% endfor %}
     </div>
 
     <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
       <h2 class="text-2xl font-semibold text-[var(--primary)] mb-2">Definition</h2>
-      <p class="text-gray-700">{{ skill.definition }}</p>
+      <p>{{ skill.definition }}</p>
     </div>
 
     <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
       <h2 class="text-2xl font-semibold text-[var(--primary)] mb-2">How to Use</h2>
-      <ul class="list-disc pl-5 text-gray-700 space-y-1">
-        {% for s in skill.how_to %}
-          <li>{{ s }}</li>
+      <ul class="list-disc pl-5 space-y-1">
+        {% for step in skill.how_to %}
+          <li>{{ step }}</li>
         {% endfor %}
       </ul>
     </div>
 
     <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
       <h2 class="text-2xl font-semibold text-[var(--primary)] mb-2">Example</h2>
-      <p class="text-gray-700">{{ skill.example }}</p>
+      <p>{{ skill.example }}</p>
     </div>
 
     <div class="text-center mt-6">
-      <a href="{{ url_for('skills') }}" class="text-[var(--primary)] hover:text-[var(--secondary)] font-medium">← Back to All Skills</a>
+      <a href="{{ url_for('skills') }}" class="text-[var(--primary)] hover:text-[var(--secondary)]">
+        ← Back to All Skills
+      </a>
     </div>
   </main>
+
+  <script>
+    const FAVORITES_KEY = "skill_favorites_v1";
+
+    function loadFavorites() {
+      try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; }
+      catch { return []; }
+    }
+    function saveFavorites(f) {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(f));
+    }
+
+    const skillName = "{{ skill.name }}";
+    const favoriteBtn = document.getElementById("favoriteBtn");
+    const favoriteIcon = document.getElementById("favoriteIcon");
+
+    let favorites = new Set(loadFavorites());
+
+    function updateStar() {
+      if (favorites.has(skillName)) {
+        favoriteIcon.classList.remove("star-off");
+        favoriteIcon.classList.add("star-on");
+      } else {
+        favoriteIcon.classList.remove("star-on");
+        favoriteIcon.classList.add("star-off");
+      }
+    }
+
+    favoriteBtn.addEventListener("click", () => {
+      if (favorites.has(skillName)) favorites.delete(skillName);
+      else favorites.add(skillName);
+
+      saveFavorites([...favorites]);
+      updateStar();
+    });
+
+    updateStar();
+  </script>
 </body>
 </html>

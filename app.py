@@ -483,5 +483,8 @@ def skill_detail(name):
     skill_with_name["name"] = name
     return render_template("skill_details.html", skill=skill_with_name)
 
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)

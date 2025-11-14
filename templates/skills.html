@@ -12,6 +12,8 @@
       --bg-light: #f8fafc;
       --text-dark: #2d2f34;
     }
+    .star-on { color: #f6c244; }
+    .star-off { color: #c6c6c6; }
   </style>
 </head>
 <body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen">
@@ -19,9 +21,9 @@
     <div class="max-w-6xl mx-auto flex justify-between items-center py-4 px-6">
       <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
       <div class="space-x-6">
-        <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
-        <a href="{{ url_for('analytics') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Analytics</a>
-        <a href="{{ url_for('skills') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Skills</a>
+        <a href="{{ url_for('home') }}" class="hover:text-[var(--primary)]">Home</a>
+        <a href="{{ url_for('analytics') }}" class="hover:text-[var(--primary)]">Analytics</a>
+        <a href="{{ url_for('skills') }}" class="hover:text-[var(--primary)]">Skills</a>
       </div>
     </div>
   </nav>
@@ -30,9 +32,11 @@
     <h2 class="text-3xl font-bold mb-6 text-center text-[var(--secondary)]">🧭 Skills Library</h2>
 
     <!-- Filters -->
-    <section class="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-      <div class="flex gap-3 w-full md:w-2/3">
-        <input id="search" type="search" placeholder="Search skills, definitions, or tags..." class="w-full p-3 rounded-lg border border-gray-300" />
+    <section class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+      <div class="md:col-span-2 flex gap-3">
+        <input id="search" type="search" placeholder="Search skills, definitions, or tags..."
+               class="w-full p-3 rounded-lg border border-gray-300" />
+
         <select id="categoryFilter" class="p-3 rounded-lg border border-gray-300">
           <option value="">All categories</option>
           {% for cat in categories %}
@@ -41,122 +45,190 @@
         </select>
       </div>
 
-      <div class="w-full md:w-1/3 flex flex-wrap gap-2">
-        <span class="text-sm font-medium text-gray-600 self-center">Tags:</span>
-        <div id="tagContainer" class="flex gap-2 flex-wrap">
+      <!-- Tags -->
+      <div class="flex items-center justify-end gap-3">
+        <span class="text-sm text-gray-600">Tags:</span>
+        <div id="tagContainer" class="flex gap-2 flex-wrap justify-end">
           {% for tag in tags %}
-            <button class="tag-btn px-3 py-1 text-sm rounded-full border border-gray-200 bg-white hover:bg-[var(--primary)]/10" data-tag="{{ tag }}">{{ tag }}</button>
+            <button class="tag-btn px-3 py-1 text-sm rounded-full border border-gray-200 bg-white hover:bg-[var(--primary)]/10"
+                    data-tag="{{ tag }}">{{ tag }}</button>
           {% endfor %}
         </div>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="mb-6 flex items-center justify-between gap-4">
+      <div class="flex gap-3 items-center">
+        <button id="showFavoritesBtn" class="px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-[var(--primary)]/10">
+          Show favorites only
+        </button>
+        <button id="clearFiltersBtn" class="px-3 py-2 rounded-lg border border-gray-200 bg-white hover:bg-[var(--primary)]/10">
+          Clear filters
+        </button>
+      </div>
+      <div class="text-sm text-gray-500">
+        Click tags or categories, or use search.
       </div>
     </section>
 
     <!-- Skills list -->
     <section id="skillsList" class="space-y-6">
       {% for name, skill in skills.items() %}
-        <article class="skill-card bg-white rounded-2xl shadow-md p-6" data-name="{{ name | lower }}" data-category="{{ skill.category }}" data-tags="{{ skill.tags | join(',') }}">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-2xl font-semibold text-[var(--primary)] mb-1">
-                <a href="{{ url_for('skill_detail', name=name) }}">{{ name }}</a>
-              </h3>
-              <div class="text-sm text-gray-500 mb-3">{{ skill.category }} •
-                <span class="inline-flex gap-1 items-center ml-2">
+        <article class="skill-card bg-white rounded-2xl shadow-md p-6 flex flex-col md:flex-row gap-4"
+                 data-name="{{ name | lower }}"
+                 data-skillname="{{ name }}"
+                 data-category="{{ skill.category }}"
+                 data-tags="{{ skill.tags | join(',') }}">
+
+          <div class="flex-1">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="text-2xl font-semibold text-[var(--primary)] mb-1">
+                  <a href="{{ url_for('skill_detail', name=name) }}">{{ name }}</a>
+                </h3>
+
+                <p class="text-sm text-gray-500 mb-2">
+                  {{ skill.category }} •
                   {% for t in skill.tags %}
-                    <span class="px-2 py-0.5 rounded-full text-xs bg-[var(--secondary)]/10 text-[var(--secondary)]">{{ t }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-xs bg-[var(--secondary)]/10 text-[var(--secondary)]">
+                      {{ t }}
+                    </span>
                   {% endfor %}
-                </span>
+                </p>
               </div>
+
+              <!-- Favorite button -->
+              <button class="favorite-btn p-2 rounded-full" data-skill="{{ name }}">
+                <svg class="star-icon w-6 h-6 star-off" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21L16.545 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.455 13.97L5.82 21L12 17.27Z"/>
+                </svg>
+              </button>
             </div>
-          </div>
 
-          <p class="text-gray-700 mb-4">{{ skill.definition }}</p>
+            <p class="text-gray-700 mb-3">{{ skill.definition }}</p>
 
-          <div class="mb-3">
             <h4 class="font-semibold text-gray-600 mb-1">How to use</h4>
             <ul class="list-disc pl-5 text-gray-700">
-              {% for step in skill.how_to %}
-                <li>{{ step }}</li>
+              {% for s in skill.how_to %}
+                <li>{{ s }}</li>
               {% endfor %}
             </ul>
-          </div>
-
-          <div>
-            <h4 class="font-semibold text-gray-600 mb-1">Example</h4>
-            <p class="text-gray-700">{{ skill.example }}</p>
           </div>
         </article>
       {% endfor %}
     </section>
-
-    <div class="text-center mt-10 text-sm text-gray-500">
-      Tip: click a tag to filter, or type in the search box to find keywords in names, definitions, or tags.
-    </div>
   </main>
 
   <script>
-    // Basic client-side filtering (search, category, tag)
-    const searchInput = document.getElementById('search');
-    const categorySelect = document.getElementById('categoryFilter');
-    const tagButtons = Array.from(document.querySelectorAll('.tag-btn'));
-    const skillCards = Array.from(document.querySelectorAll('.skill-card'));
+    /* -------------------------
+       Favorites + Filters
+       ------------------------- */
 
-    let activeTag = "";
+    const FAVORITES_KEY = 'skill_favorites_v1';
 
-    function normalize(s) {
-      return (s || "").toString().toLowerCase();
+    function loadFavorites() {
+      try { return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || []; }
+      catch { return []; }
+    }
+    function saveFavorites(favs) {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
     }
 
-    function applyFilters() {
-      const q = normalize(searchInput.value);
-      const category = categorySelect.value;
-      skillCards.forEach(card => {
-        const name = normalize(card.dataset.name);
-        const def = normalize(card.querySelector('p')?.textContent || "");
-        const tags = normalize(card.dataset.tags || "");
-        const cat = card.dataset.category || "";
+    let favorites = new Set(loadFavorites());
 
-        // match search (name | definition | tags)
-        const matchesSearch = !q || name.includes(q) || def.includes(q) || tags.includes(q);
-        const matchesCategory = !category || cat === category;
-        const matchesTag = !activeTag || tags.split(',').includes(normalize(activeTag));
+    const searchInput = document.getElementById('search');
+    const categorySelect = document.getElementById('categoryFilter');
+    const tagButtons = [...document.querySelectorAll('.tag-btn')];
+    const skillCards = [...document.querySelectorAll('.skill-card')];
+    const showFavoritesBtn = document.getElementById('showFavoritesBtn');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
-        card.style.display = (matchesSearch && matchesCategory && matchesTag) ? "" : "none";
+    let activeTag = "";
+    let favoritesOnly = false;
+
+    function refreshStars() {
+      document.querySelectorAll('.favorite-btn').forEach(btn => {
+        const name = btn.dataset.skill;
+        const icon = btn.querySelector('.star-icon');
+        if (favorites.has(name)) {
+          icon.classList.remove('star-off');
+          icon.classList.add('star-on');
+        } else {
+          icon.classList.remove('star-on');
+          icon.classList.add('star-off');
+        }
       });
     }
 
-    // events
-    searchInput.addEventListener('input', applyFilters);
-    categorySelect.addEventListener('change', applyFilters);
+    function applyFilters() {
+      const q = searchInput.value.toLowerCase();
+      const category = categorySelect.value;
+
+      skillCards.forEach(card => {
+        const name = card.dataset.skillname.toLowerCase();
+        const def = card.querySelector("p")?.textContent.toLowerCase() || "";
+        const tags = (card.dataset.tags || "").toLowerCase();
+        const cat = card.dataset.category;
+
+        const matchesSearch =
+            !q || name.includes(q) || def.includes(q) || tags.includes(q);
+
+        const matchesCategory = !category || cat === category;
+        const matchesTag = !activeTag || tags.split(",").includes(activeTag.toLowerCase());
+        const matchesFav = !favoritesOnly || favorites.has(card.dataset.skillname);
+
+        card.style.display = (matchesSearch && matchesCategory && matchesTag && matchesFav)
+          ? ""
+          : "none";
+      });
+    }
+
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.skill;
+        if (favorites.has(name)) favorites.delete(name);
+        else favorites.add(name);
+        saveFavorites([...favorites]);
+        refreshStars();
+        applyFilters();
+      });
+    });
 
     tagButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        // toggle active tag
-        if (activeTag === btn.dataset.tag) {
+        const t = btn.dataset.tag;
+        if (activeTag === t) {
           activeTag = "";
-          btn.classList.remove('bg-[var(--primary)]/20');
+          btn.classList.remove("bg-[var(--primary)]/20");
         } else {
-          // remove active style from all, then set for clicked
-          tagButtons.forEach(b => b.classList.remove('bg-[var(--primary)]/20'));
-          activeTag = btn.dataset.tag;
-          btn.classList.add('bg-[var(--primary)]/20');
+          activeTag = t;
+          tagButtons.forEach(b => b.classList.remove("bg-[var(--primary)]/20"));
+          btn.classList.add("bg-[var(--primary)]/20");
         }
         applyFilters();
       });
     });
 
-    // allow Search + Enter to focus first visible skill
-    searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        const first = skillCards.find(c => c.style.display !== 'none');
-        if (first) {
-          const link = first.querySelector('a');
-          if (link) window.location = link.href;
-        }
-      }
+    showFavoritesBtn.addEventListener('click', () => {
+      favoritesOnly = !favoritesOnly;
+      showFavoritesBtn.textContent = favoritesOnly ? "Show all skills" : "Show favorites only";
+      applyFilters();
     });
 
-    // initial
+    clearFiltersBtn.addEventListener('click', () => {
+      searchInput.value = "";
+      categorySelect.value = "";
+      activeTag = "";
+      favoritesOnly = false;
+      tagButtons.forEach(b => b.classList.remove("bg-[var(--primary)]/20"));
+      applyFilters();
+    });
+
+    searchInput.addEventListener('input', applyFilters);
+    categorySelect.addEventListener('change', applyFilters);
+
+    refreshStars();
     applyFilters();
   </script>
 </body>
