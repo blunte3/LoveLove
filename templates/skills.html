@@ -1,8 +1,9 @@
+<!-- templates/skills.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Skills Database</title>
+  <meta charset="utf-8" />
+  <title>Skills Library</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
@@ -15,7 +16,7 @@
 </head>
 <body class="bg-[var(--bg-light)] text-[var(--text-dark)] font-sans min-h-screen">
   <nav class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-10">
-    <div class="max-w-5xl mx-auto flex justify-between items-center py-4 px-6">
+    <div class="max-w-6xl mx-auto flex justify-between items-center py-4 px-6">
       <h1 class="text-xl font-semibold text-[var(--primary)]">My Journal</h1>
       <div class="space-x-6">
         <a href="{{ url_for('home') }}" class="text-[var(--text-dark)] hover:text-[var(--primary)] font-medium">Home</a>
@@ -25,107 +26,138 @@
     </div>
   </nav>
 
-  <main class="max-w-4xl mx-auto px-4 py-10">
-    <h2 class="text-3xl font-bold mb-8 text-center text-[var(--secondary)]">🧠 Skills & Techniques</h2>
+  <main class="max-w-6xl mx-auto px-4 py-10">
+    <h2 class="text-3xl font-bold mb-6 text-center text-[var(--secondary)]">🧭 Skills Library</h2>
 
-    {% for name, skill in skills.items() %}
-      <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
-        <h3 class="text-2xl font-semibold text-[var(--primary)] mb-2">{{ name }}</h3>
-        <p class="text-gray-700 mb-4">{{ skill.definition }}</p>
+    <!-- Filters -->
+    <section class="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div class="flex gap-3 w-full md:w-2/3">
+        <input id="search" type="search" placeholder="Search skills, definitions, or tags..." class="w-full p-3 rounded-lg border border-gray-300" />
+        <select id="categoryFilter" class="p-3 rounded-lg border border-gray-300">
+          <option value="">All categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
-        <div class="mb-4">
-          <h4 class="font-semibold text-gray-600 mb-2">How to Practice:</h4>
-          <ul class="list-disc pl-5 space-y-1 text-gray-700">
-            {% for step in skill.steps %}
-              <li>{{ step }}</li>
-            {% endfor %}
-          </ul>
+      <div class="w-full md:w-1/3 flex flex-wrap gap-2">
+        <span class="text-sm font-medium text-gray-600 self-center">Tags:</span>
+        <div id="tagContainer" class="flex gap-2 flex-wrap">
+          {% for tag in tags %}
+            <button class="tag-btn px-3 py-1 text-sm rounded-full border border-gray-200 bg-white hover:bg-[var(--primary)]/10" data-tag="{{ tag }}">{{ tag }}</button>
+          {% endfor %}
         </div>
+      </div>
+    </section>
 
-        {% if skill.enhancement == "breathe" %}
-          <div class="mt-4">
-            <button onclick="startBreathing()" class="bg-[var(--primary)] text-white px-4 py-2 rounded-md shadow-md hover:scale-105 transition">
-              🌬️ Start Breathing Exercise
-            </button>
-            <div id="breathe-circle" class="w-24 h-24 mx-auto mt-4 rounded-full bg-[var(--secondary)] opacity-60 animate-pulse hidden"></div>
+    <!-- Skills list -->
+    <section id="skillsList" class="space-y-6">
+      {% for name, skill in skills.items() %}
+        <article class="skill-card bg-white rounded-2xl shadow-md p-6" data-name="{{ name | lower }}" data-category="{{ skill.category }}" data-tags="{{ skill.tags | join(',') }}">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-2xl font-semibold text-[var(--primary)] mb-1">
+                <a href="{{ url_for('skill_detail', name=name) }}">{{ name }}</a>
+              </h3>
+              <div class="text-sm text-gray-500 mb-3">{{ skill.category }} •
+                <span class="inline-flex gap-1 items-center ml-2">
+                  {% for t in skill.tags %}
+                    <span class="px-2 py-0.5 rounded-full text-xs bg-[var(--secondary)]/10 text-[var(--secondary)]">{{ t }}</span>
+                  {% endfor %}
+                </span>
+              </div>
+            </div>
           </div>
-        {% elif skill.enhancement == "reflection" %}
-          <div class="mt-4">
-            <label class="block font-medium text-gray-600 mb-1">Reflection:</label>
-            <textarea class="w-full border rounded-md p-3 text-gray-700" rows="3" placeholder="Write your thoughts..."></textarea>
-          </div>
-        {% elif skill.enhancement == "audio" %}
-          <div class="mt-4">
-            <button onclick="alert('Playing calming guide...')" class="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white px-4 py-2 rounded-md shadow-md hover:scale-105 transition">
-              🎧 Play Audio Guide
-            </button>
-          </div>
-        {% endif %}
-      </div>
-    {% endfor %}
 
-    <!-- New Skills (example for direct addition if not using Jinja) -->
-    <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
-      <h3 class="text-2xl font-semibold text-[var(--primary)] mb-2">Cognitive Reframing</h3>
-      <p class="text-gray-700 mb-4">
-        Cognitive Reframing helps you identify unhelpful thoughts and reinterpret them in a more balanced, realistic way to reduce stress or anxiety.
-      </p>
-      <div class="mb-4">
-        <h4 class="font-semibold text-gray-600 mb-2">How to Practice:</h4>
-        <ul class="list-disc pl-5 space-y-1 text-gray-700">
-          <li>Notice a negative thought or assumption.</li>
-          <li>Ask: “Is this 100% true? What evidence do I have?”</li>
-          <li>Reframe it into a more neutral or positive statement.</li>
-          <li>Reflect on how the new thought changes your mood.</li>
-        </ul>
-      </div>
-      <div class="mt-4">
-        <label class="block font-medium text-gray-600 mb-1">Reflection:</label>
-        <textarea class="w-full border rounded-md p-3 text-gray-700" rows="3" placeholder="Try reframing one recent thought..."></textarea>
-      </div>
-    </div>
+          <p class="text-gray-700 mb-4">{{ skill.definition }}</p>
 
-    <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
-      <h3 class="text-2xl font-semibold text-[var(--primary)] mb-2">Progressive Muscle Relaxation</h3>
-      <p class="text-gray-700 mb-4">
-        This relaxation technique involves tensing and relaxing muscle groups one at a time to reduce physical tension and promote calm.
-      </p>
-      <div class="mb-4">
-        <h4 class="font-semibold text-gray-600 mb-2">How to Practice:</h4>
-        <ul class="list-disc pl-5 space-y-1 text-gray-700">
-          <li>Sit or lie comfortably in a quiet place.</li>
-          <li>Tense a muscle group (like your fists) for 5 seconds.</li>
-          <li>Slowly release and focus on the feeling of relaxation.</li>
-          <li>Move progressively through your body.</li>
-        </ul>
-      </div>
-      <div class="mt-4">
-        <button onclick="alert('Playing relaxation guide...')" class="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white px-4 py-2 rounded-md shadow-md hover:scale-105 transition">
-          🎧 Play Audio Guide
-        </button>
-      </div>
+          <div class="mb-3">
+            <h4 class="font-semibold text-gray-600 mb-1">How to use</h4>
+            <ul class="list-disc pl-5 text-gray-700">
+              {% for step in skill.how_to %}
+                <li>{{ step }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-600 mb-1">Example</h4>
+            <p class="text-gray-700">{{ skill.example }}</p>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+
+    <div class="text-center mt-10 text-sm text-gray-500">
+      Tip: click a tag to filter, or type in the search box to find keywords in names, definitions, or tags.
     </div>
   </main>
 
   <script>
-    function startBreathing() {
-      const circle = document.getElementById("breathe-circle");
-      circle.classList.remove("hidden");
-      let phase = 0;
-      const phases = ["Breathe In...", "Hold...", "Breathe Out..."];
-      const text = document.createElement("div");
-      text.className = "text-center mt-4 font-semibold text-gray-700";
-      circle.parentNode.appendChild(text);
+    // Basic client-side filtering (search, category, tag)
+    const searchInput = document.getElementById('search');
+    const categorySelect = document.getElementById('categoryFilter');
+    const tagButtons = Array.from(document.querySelectorAll('.tag-btn'));
+    const skillCards = Array.from(document.querySelectorAll('.skill-card'));
 
-      const cycle = () => {
-        text.textContent = phases[phase % 3];
-        circle.style.transform = phase % 3 === 1 ? "scale(1.2)" : "scale(1)";
-        phase++;
-      };
+    let activeTag = "";
 
-      cycle();
-      setInterval(cycle, 4000);
+    function normalize(s) {
+      return (s || "").toString().toLowerCase();
     }
+
+    function applyFilters() {
+      const q = normalize(searchInput.value);
+      const category = categorySelect.value;
+      skillCards.forEach(card => {
+        const name = normalize(card.dataset.name);
+        const def = normalize(card.querySelector('p')?.textContent || "");
+        const tags = normalize(card.dataset.tags || "");
+        const cat = card.dataset.category || "";
+
+        // match search (name | definition | tags)
+        const matchesSearch = !q || name.includes(q) || def.includes(q) || tags.includes(q);
+        const matchesCategory = !category || cat === category;
+        const matchesTag = !activeTag || tags.split(',').includes(normalize(activeTag));
+
+        card.style.display = (matchesSearch && matchesCategory && matchesTag) ? "" : "none";
+      });
+    }
+
+    // events
+    searchInput.addEventListener('input', applyFilters);
+    categorySelect.addEventListener('change', applyFilters);
+
+    tagButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // toggle active tag
+        if (activeTag === btn.dataset.tag) {
+          activeTag = "";
+          btn.classList.remove('bg-[var(--primary)]/20');
+        } else {
+          // remove active style from all, then set for clicked
+          tagButtons.forEach(b => b.classList.remove('bg-[var(--primary)]/20'));
+          activeTag = btn.dataset.tag;
+          btn.classList.add('bg-[var(--primary)]/20');
+        }
+        applyFilters();
+      });
+    });
+
+    // allow Search + Enter to focus first visible skill
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const first = skillCards.find(c => c.style.display !== 'none');
+        if (first) {
+          const link = first.querySelector('a');
+          if (link) window.location = link.href;
+        }
+      }
+    });
+
+    // initial
+    applyFilters();
   </script>
 </body>
 </html>

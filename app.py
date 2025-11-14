@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, abort
 import sqlite3
 from datetime import datetime
 import json
@@ -8,70 +8,272 @@ import re
 app = Flask(__name__)
 
 skills_db = {
+    "Coping Thoughts": {
+        "category": "Emotion Regulation",
+        "tags": ["cognition", "reframe", "self-talk"],
+        "definition": "Short, structured ways to notice and change unhelpful thinking patterns to reduce distress.",
+        "how_to": [
+            "Notice the automatic negative thought.",
+            "Label it (e.g., 'catastrophizing').",
+            "Ask for evidence for/against it.",
+            "Replace with a balanced alternative thought."
+        ],
+        "example": "If you think 'I always fail', ask: 'Always? What evidence contradicts that?' then form: 'I've succeeded before and can try again.'"
+    },
     "Grounding": {
         "category": "Distress Tolerance",
-        "definition": "A technique to help you stay present by focusing on physical sensations or immediate surroundings.",
-        "steps": [
-            "Notice 5 things you can see.",
-            "Notice 4 things you can touch.",
-            "Notice 3 things you can hear.",
-            "Notice 2 things you can smell.",
-            "Notice 1 thing you can taste."
+        "tags": ["present moment", "senses", "5-4-3-2-1"],
+        "definition": "Use your senses and surroundings to bring attention to the present and reduce overwhelm.",
+        "how_to": [
+            "Look for 5 things you can see.",
+            "Touch 4 things and name their textures.",
+            "Listen for 3 sounds, identify 2 smells, and taste 1 thing if possible."
         ],
-        "enhancement": "breathe"
+        "example": "At your desk, name 5 visible objects, touch your mug, and notice 3 sounds to steady your mind."
+    },
+    "Deep Breathing": {
+        "category": "Distress Tolerance",
+        "tags": ["breath", "DB", "relaxation"],
+        "definition": "Intentional breathing patterns used to calm the nervous system and reduce acute stress.",
+        "how_to": [
+            "Sit comfortably and relax your shoulders.",
+            "Inhale slowly through your nose for 4 counts.",
+            "Hold for 2 counts, then exhale for 6 counts.",
+            "Repeat for 4–6 cycles, adjusting counts as needed."
+        ],
+        "example": "Before a call, practice 5 cycles of 4-2-6 breathing to lower your heart rate."
+    },
+    "DEAR MAN": {
+        "category": "Interpersonal Effectiveness",
+        "tags": ["assertiveness", "communication", "dbt"],
+        "definition": "A structured script (Describe, Express, Assert, Reinforce, Mindful, Appear confident, Negotiate) for asking for what you want effectively.",
+        "how_to": [
+            "Describe the situation briefly and objectively.",
+            "Express feelings and wishes clearly.",
+            "Assert your request and note the benefits (Reinforce).",
+            "Stay mindful, appear confident, and be ready to negotiate alternatives."
+        ],
+        "example": "Ask your manager for flexible hours: describe the issue, express how it helps productivity, assert the request, and offer compromises."
+    },
+    "PMR": {
+        "category": "Distress Tolerance",
+        "tags": ["progressive", "tension-release", "relaxation"],
+        "definition": "Progressive Muscle Relaxation: systematically tense and relax muscle groups to reduce physical tension.",
+        "how_to": [
+            "Find a quiet place and sit or lie down.",
+            "Tense one muscle group for ~5 seconds, then release slowly.",
+            "Move through major groups from head to toe (or vice versa)."
+        ],
+        "example": "Before bed, tense your fists, release, then forearms, shoulders, and so on to unwind."
     },
     "Mindfulness": {
         "category": "Mindfulness",
-        "definition": "Being aware of the present moment without judgment.",
-        "steps": [
-            "Focus on your breathing.",
-            "Notice when your mind wanders.",
-            "Gently bring your focus back to the breath."
+        "tags": ["present", "attention", "nonjudgment"],
+        "definition": "The practice of paying attention to the present moment with curiosity and without judgement.",
+        "how_to": [
+            "Choose an anchor (breath, sensation, or sounds).",
+            "Gently bring attention back when the mind wanders.",
+            "Notice thoughts without following or judging them."
         ],
-        "enhancement": "reflection"
+        "example": "Spend 5 minutes noticing breath sensations; when mind wanders, note 'thinking' and return to breathing."
+    },
+    "Distraction": {
+        "category": "General Coping",
+        "tags": ["shift focus", "short-term", "activities"],
+        "definition": "Temporarily redirect attention to neutral or positive activities to reduce emotional intensity.",
+        "how_to": [
+            "Pick a brief activity you enjoy (walk, puzzle, call a friend).",
+            "Engage fully for a set period (10–30 minutes).",
+            "Return to the triggering thought when you feel calmer."
+        ],
+        "example": "If stuck in rumination, do a 15-minute walk or solve a crossword to shift perspective."
+    },
+    "Opposite Action": {
+        "category": "Emotion Regulation",
+        "tags": ["behavioral", "mood", "act-opposite"],
+        "definition": "Deliberately do the opposite of an emotion-driven urge when the emotion is unhelpful or unjustified.",
+        "how_to": [
+            "Identify the emotion and the urge it causes.",
+            "Decide if the emotion fits the facts and goals.",
+            "If not, choose an opposite action (e.g., socialize when avoiding)."
+        ],
+        "example": "If you feel like isolating out of sadness, schedule a short coffee with a friend to counteract the urge."
     },
     "Radical Acceptance": {
         "category": "Distress Tolerance",
-        "definition": "Accepting reality as it is — even when painful — without trying to fight it.",
-        "steps": [
-            "Acknowledge the situation.",
-            "Recognize what you can and can’t control.",
-            "Choose acceptance rather than resistance."
+        "tags": ["acceptance", "reality", "reduce-resistance"],
+        "definition": "Completely acknowledging reality as it is in order to reduce suffering caused by resistance.",
+        "how_to": [
+            "Notice what is happening and name it objectively.",
+            "Acknowledge what you cannot change right now.",
+            "Choose how to respond rather than fighting reality."
         ],
-        "enhancement": "audio"
+        "example": "When a flight is delayed, accept the delay and use the time to read or plan instead of ruminating."
     },
-    "Reframing": {
-        "category": "Goals & Values",
-        "definition": "Changing your perspective on a situation to view it in a more constructive way.",
-        "steps": [
-            "Identify the negative thought.",
-            "Ask: 'Is this 100% true?'",
-            "Replace it with a more balanced thought."
+    "Walk": {
+        "category": "Distress Tolerance",
+        "tags": ["movement", "outdoors", "mood-boost"],
+        "definition": "Using walking intentionally to shift mood, ground attention, and get light exercise.",
+        "how_to": [
+            "Choose a comfortable route and pace.",
+            "Focus on sensations (feet, breath, scenery).",
+            "Allow thoughts to pass and notice changes in mood."
         ],
-        "enhancement": "reflection"
+        "example": "Take a 10–20 minute outdoor walk when stressed to clear your head."
     },
-    # ---- NEW SKILLS ----
-    "Cognitive Reframing": {
-        "category": "Cognitive Techniques",
-        "definition": "Helps identify unhelpful thoughts and reinterpret them in a more balanced, realistic way to reduce stress or anxiety.",
-        "steps": [
-            "Notice a negative thought or assumption.",
-            "Ask: 'Is this thought entirely accurate?'",
-            "Reframe it into a more neutral or positive statement.",
-            "Reflect on how this changes your emotions."
+    "Eat": {
+        "category": "Distress Tolerance",
+        "tags": ["self-care", "nourish", "mindful-eating"],
+        "definition": "Mindful or planned eating to support physical stability and emotional regulation.",
+        "how_to": [
+            "Choose nourishing foods and regular meal times.",
+            "Eat mindfully: notice flavors, textures, and hunger cues.",
+            "Avoid skipping meals when stressed."
         ],
-        "enhancement": "reflection"
+        "example": "Pack a balanced snack and eat it consciously to prevent energy crashes during a stressful day."
     },
-    "Progressive Muscle Relaxation": {
-        "category": "Stress Management",
-        "definition": "A relaxation technique that involves tensing and relaxing muscle groups one at a time to reduce physical tension and promote calm.",
-        "steps": [
-            "Find a quiet space and get comfortable.",
-            "Tense a specific muscle group for about 5 seconds.",
-            "Release the tension and focus on the feeling of relaxation.",
-            "Move progressively through your body."
+    "Meditate": {
+        "category": "Distress Tolerance",
+        "tags": ["practice", "breath", "awareness"],
+        "definition": "Formal practice to train attention and awareness, reducing reactivity over time.",
+        "how_to": [
+            "Set a short time (5–10 minutes) and find a quiet place.",
+            "Choose a technique (breath, body scan, loving-kindness).",
+            "Return your attention gently when it wanders."
         ],
-        "enhancement": "audio"
+        "example": "Do a 10-minute breath-focused meditation each morning to improve baseline calm."
+    },
+    "Hobbies": {
+        "category": "Emotion Regulation",
+        "tags": ["meaningful-activity", "skill", "pleasure"],
+        "definition": "Engaging in enjoyable or meaningful activities to restore positive affect and build identity.",
+        "how_to": [
+            "List activities you enjoy or want to try.",
+            "Schedule regular, small blocks of time for them.",
+            "Start small to reduce overwhelm and build momentum."
+        ],
+        "example": "Spend 30 minutes twice a week on painting or playing guitar to boost mood."
+    },
+    "Exercise": {
+        "category": "Emotion Regulation",
+        "tags": ["movement", "endurance", "mood-regulation"],
+        "definition": "Planned physical activity that supports mood, sleep, and stress resilience.",
+        "how_to": [
+            "Pick an activity you can maintain (walk, swim, gym).",
+            "Set realistic frequency and duration goals.",
+            "Track small wins and adjust when needed."
+        ],
+        "example": "A 20-minute jog three times per week to help manage anxiety symptoms."
+    },
+    "Seeking Help": {
+        "category": "Interpersonal Effectiveness",
+        "tags": ["support", "ask-for-help", "resources"],
+        "definition": "Identifying and reaching out to people or professionals when you need support.",
+        "how_to": [
+            "Identify what kind of help you need (practical, emotional, medical).",
+            "Choose who to ask and how (call, text, email).",
+            "Be specific about what would help and offer potential times or options."
+        ],
+        "example": "Email a coworker: 'Could you cover my meeting Tuesday? I need 30 minutes to handle a personal matter.'"
+    },
+    "Aromatherapy": {
+        "category": "Distress Tolerance",
+        "tags": ["scent", "self-care", "relaxation"],
+        "definition": "Using scents (essential oils, candles) intentionally to cue calm or uplift mood.",
+        "how_to": [
+            "Choose a scent that soothes or energizes you.",
+            "Use a diffuser or inhale briefly from a cloth.",
+            "Pair scent with a calming routine (breath, reading)."
+        ],
+        "example": "Diffuse lavender during an evening wind-down to signal relaxation."
+    },
+    "Reading": {
+        "category": "General Coping",
+        "tags": ["distraction", "learning", "escape"],
+        "definition": "Using books or articles to calm the mind, learn new skills, or get a brief escape.",
+        "how_to": [
+            "Pick material that matches your goal (calming fiction, helpful non-fiction).",
+            "Set a short reading window (15–30 minutes).",
+            "Notice if reading helps mood or causes avoidance; adjust accordingly."
+        ],
+        "example": "Read a soothing short story for 20 minutes before bed to unwind."
+    },
+    "Contributing": {
+        "category": "Interpersonal Effectiveness",
+        "tags": ["helping", "volunteer", "connection"],
+        "definition": "Helping others or contributing to a community to build meaning and improve mood.",
+        "how_to": [
+            "Choose an avenue (volunteer, help a neighbor, mentor).",
+            "Start with a small, doable action.",
+            "Reflect on how the contribution felt afterward."
+        ],
+        "example": "Volunteer two hours a month at a local shelter to increase connection and purpose."
+    },
+    "Comparison": {
+        "category": "Emotion Regulation",
+        "tags": ["self-evaluation", "perspective", "social-media"],
+        "definition": "Noticing comparison urges and using strategies to reduce their negative impact.",
+        "how_to": [
+            "Notice when you compare and what triggers it.",
+            "Remind yourself of differences in context and partial information.",
+            "Shift focus to personal values or small progress metrics."
+        ],
+        "example": "If social media triggers comparison, limit scrolling to 10 minutes and list three personal wins after."
+    },
+    "Opposite Emotion": {
+        "category": "Emotion Regulation",
+        "tags": ["behavioral", "mood-shift", "skill"],
+        "definition": "Intentionally generating an emotion that opposes and counteracts an unhelpful one (e.g., produce calm when anxious).",
+        "how_to": [
+            "Identify the unhelpful emotion and a healthy opposite (e.g., calm vs. panic).",
+            "Choose activities that reliably produce the opposite (deep breathing, soothing music).",
+            "Practice until the opposite emotion is accessible."
+        ],
+        "example": "Play slow, calming music and do deep breathing to shift from panic toward calm."
+    },
+    "Sensations": {
+        "category": "Distress Tolerance",
+        "tags": ["body", "interoception", "awareness"],
+        "definition": "Focusing on bodily sensations to anchor attention and differentiate physical from emotional signals.",
+        "how_to": [
+            "Scan the body and name sensations (warmth, tension, tingling).",
+            "Note intensity and location without judgment.",
+            "Use grounding touch (hold ice, splash water) if needed."
+        ],
+        "example": "Notice the pressure of your feet on the floor and lengthen that awareness during a stress spike."
+    },
+    "Self-Soothing": {
+        "category": "Distress Tolerance",
+        "tags": ["comfort", "5-senses", "calm"],
+        "definition": "Use comforting activities across the five senses to soothe emotional distress.",
+        "how_to": [
+            "List soothing actions for each sense (e.g., warm tea for taste, soft blanket for touch).",
+            "Try one or two that are available and notice their effect.",
+            "Make a 'self-soothe kit' for future use."
+        ],
+        "example": "Wrap in a soft blanket, sip chamomile, and listen to gentle music when upset."
+    },
+    "Imagery": {
+        "category": "Emotion Regulation",
+        "tags": ["visualization", "calm", "mental-prep"],
+        "definition": "Using guided or self-created mental images to change mood or rehearse coping.",
+        "how_to": [
+            "Close your eyes and imagine a calm, safe place with details.",
+            "Engage all senses in the image (sight, sound, smell).",
+            "Use the image when feeling stressed or to rehearse a challenge."
+        ],
+        "example": "Visualize a peaceful beach—feel the sun and hear waves—before giving a presentation."
+    },
+    "Vacation": {
+        "category": "Distress Tolerance",
+        "tags": ["rest", "recharge", "planning"],
+        "definition": "Planned time away from routine to rest, reset priorities, and reduce chronic stress.",
+        "how_to": [
+            "Plan time off, even short breaks, and set realistic expectations.",
+            "Decide activities that replenish you (relaxation vs. adventure).",
+            "Disconnect from work as much as possible and reflect on rest needs."
+        ],
+        "example": "Take a long weekend, put email on low-priority, and do low-effort enjoyable activities to recharge."
     }
 }
 
@@ -257,22 +459,29 @@ def view_entry(entry_id):
 
 @app.route("/skills")
 def skills():
-    return render_template("skills.html", skills=skills_db)
+    # Build category and tag lists for client-side filters
+    categories = sorted({s["category"] for s in skills_db.values()})
+    tags = sorted({tag for s in skills_db.values() for tag in s["tags"]})
+    return render_template("skills.html", skills=skills_db, categories=categories, tags=tags)
 
 
 @app.route("/skill/<name>")
 def skill_detail(name):
     skill = skills_db.get(name)
     if not skill:
-        return render_template("skill_detail.html", skill={
+        # graceful fallback - skill not found
+        return render_template("skill_details.html", skill={
             "name": name,
             "category": "Unknown",
+            "tags": [],
             "definition": "Skill not found.",
             "how_to": [],
-            "enhancements": {}
-        })
-    skill["name"] = name
-    return render_template("skill_detail.html", skill=skill)
+            "example": ""
+        }), 404
+    # provide name inside object for template convenience
+    skill_with_name = dict(skill)
+    skill_with_name["name"] = name
+    return render_template("skill_details.html", skill=skill_with_name)
 
 if __name__ == "__main__":
     app.run(debug=True)
