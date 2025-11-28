@@ -358,21 +358,49 @@ def analytics():
 
     total_entries = len(rows)
 
+    # Fields to exclude (choice/select fields) - only analyze user-entered text
+    excluded_fields = {'journal_type', 'situation_category', 'used_skills', 'title'}
+    
+    # Common stop words to filter out (words with no meaningful weight)
+    stop_words = {
+        'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 
+        'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 
+        'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 
+        'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 
+        'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 
+        'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 
+        'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 
+        'day', 'most', 'us', 'is', 'was', 'are', 'been', 'has', 'had', 'does', 'did', 'were', 'being', 'been', 
+        'may', 'might', 'must', 'shall', 'should', 'would', 'could', 'ought', 'these', 'those', 'own', 'same', 
+        'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now', 'd', 'll', 'm', 
+        'o', 're', 've', 'y', 'ain', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'ma', 
+        'mightn', 'mustn', 'needn', 'shan', 'shouldn', 'wasn', 'weren', 'won', 'wouldn'
+    }
+
     # --- 1. Entry Type Counts ---
     type_counts = {}
     for _, journal_type, _ in rows:
         type_counts[journal_type] = type_counts.get(journal_type, 0) + 1
 
     # --- 2. Combine all text for common words ---
+    
     all_text = ""
     for _, _, content in rows:
         try:
             content_dict = json.loads(content)
-            all_text += " ".join(content_dict.values()) + " "
+            # Only include text from user-entered fields (exclude choice/select fields)
+            for key, value in content_dict.items():
+                if key not in excluded_fields and value:
+                    all_text += str(value) + " "
         except:
-            all_text += content + " "
+            # For old entries that might not be JSON, treat as text entry
+            if content:
+                all_text += content + " "
+    
+    # Extract words (minimum 3 characters) and filter out stop words
     words = re.findall(r'\b[a-z]{3,}\b', all_text.lower())
-    common_words = Counter(words).most_common(20)
+    filtered_words = [word for word in words if word not in stop_words]
+    common_words = Counter(filtered_words).most_common(20)
 
     # --- 3. Weekly Writing Frequency (entries per weekday) ---
     weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -411,10 +439,19 @@ def analytics():
             weekday = dt.strftime("%a")
             try:
                 content_dict = json.loads(content)
-                text = " ".join(content_dict.values())
+                # Only include text from user-entered fields (exclude choice/select fields)
+                text_parts = []
+                for key, value in content_dict.items():
+                    if key not in excluded_fields and value:
+                        text_parts.append(str(value))
+                text = " ".join(text_parts)
             except:
-                text = content
-            word_count = len(re.findall(r'\b[a-z]{3,}\b', text.lower()))
+                text = content if content else ""
+            
+            # Extract words and filter out stop words
+            words = re.findall(r'\b[a-z]{3,}\b', text.lower())
+            filtered_words = [word for word in words if word not in stop_words]
+            word_count = len(filtered_words)
             words_by_day[weekday] += word_count
             counts_by_day[weekday] += 1
         except:
