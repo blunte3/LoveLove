@@ -1,9 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, abort
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from collections import Counter
 import re
+
+try:
+    from textblob import TextBlob
+    TEXTBLOB_AVAILABLE = True
+except ImportError:
+    TEXTBLOB_AVAILABLE = False
+    print("Warning: TextBlob not installed. Installing sentiment analysis requires: pip install textblob")
 
 app = Flask(__name__)
 
@@ -296,6 +303,112 @@ def init_db():
 
 init_db()
 
+# Emotion keywords dictionary
+EMOTION_KEYWORDS = {
+    "Joy": ["happy", "glad", "joyful", "excited", "pleased", "delighted", "cheerful", "ecstatic", 
+            "thrilled", "wonderful", "amazing", "great", "good", "love", "loved", "enjoy", "enjoying",
+            "grateful", "gratitude", "blessed", "lucky", "fortunate", "smile", "laugh", "laughing",
+            "proud", "accomplished", "success", "successful", "win", "wonderful", "fantastic"],
+    "Sadness": ["sad", "depressed", "down", "unhappy", "melancholy", "upset", "disappointed", 
+                "hurt", "pain", "painful", "crying", "tears", "lonely", "loneliness", "empty",
+                "hopeless", "helpless", "grief", "grieving", "mourn", "loss", "lost", "miss",
+                "regret", "sorry", "guilty", "shame", "worthless"],
+    "Anger": ["angry", "mad", "furious", "rage", "raging", "annoyed", "irritated", "frustrated",
+              "frustration", "hate", "hatred", "resent", "resentment", "hostile", "outraged",
+              "upset", "livid", "enraged", "bitter", "bitterness"],
+    "Fear": ["afraid", "fear", "fearful", "scared", "terrified", "anxious", "anxiety", "worried",
+             "worry", "nervous", "panic", "panicked", "dread", "dreadful", "horror", "horrified",
+             "threat", "threatened", "unsafe", "unsure", "uncertain", "uncomfortable"],
+    "Surprise": ["surprised", "surprise", "shocked", "shock", "amazed", "amazing", "astonished",
+                 "unexpected", "unbelievable", "wow", "incredible", "stunned", "stunning"],
+    "Neutral": ["okay", "fine", "normal", "alright", "ok", "neutral", "average", "regular"]
+}
+
+def analyze_sentiment(text):
+    """Analyze sentiment of text and return polarity (-1 to 1)"""
+    if not text or not text.strip():
+        return 0.0
+    
+    if TEXTBLOB_AVAILABLE:
+        try:
+            blob = TextBlob(text)
+            return round(blob.sentiment.polarity, 3)
+        except:
+            pass
+    
+    # Fallback: simple keyword-based sentiment if TextBlob not available
+    text_lower = text.lower()
+    positive_words = ["good", "great", "happy", "love", "wonderful", "excellent", "amazing", 
+                     "pleased", "joyful", "grateful", "blessed", "lucky", "proud"]
+    negative_words = ["bad", "sad", "angry", "hate", "terrible", "awful", "horrible", 
+                     "disappointed", "hurt", "pain", "lonely", "hopeless", "fear", "worried"]
+    
+    pos_count = sum(1 for word in positive_words if word in text_lower)
+    neg_count = sum(1 for word in negative_words if word in text_lower)
+    
+    if pos_count + neg_count == 0:
+        return 0.0
+    
+    return round((pos_count - neg_count) / (pos_count + neg_count), 3)
+
+def detect_emotion(text):
+    """Detect primary emotion in text based on keywords"""
+    if not text or not text.strip():
+        return "Neutral"
+    
+    text_lower = text.lower()
+    emotion_scores = {}
+    
+    for emotion, keywords in EMOTION_KEYWORDS.items():
+        score = sum(1 for keyword in keywords if keyword in text_lower)
+        if score > 0:
+            emotion_scores[emotion] = score
+    
+    if not emotion_scores:
+        return "Neutral"
+    
+    # Return emotion with highest score
+    return max(emotion_scores.items(), key=lambda x: x[1])[0]
+
+def extract_entry_text(content, excluded_fields):
+    """Extract user-entered text from entry content"""
+    try:
+        content_dict = json.loads(content)
+        text_parts = []
+        for key, value in content_dict.items():
+            if key not in excluded_fields and value:
+                text_parts.append(str(value))
+        return " ".join(text_parts)
+    except:
+        return content if content else ""
+
+def filter_rows_by_period(rows, time_period):
+    """Filter rows by time period"""
+    if time_period == 'all_time':
+        return rows
+    
+    now = datetime.now()
+    filtered_rows = []
+    
+    for date_str, journal_type, content in rows:
+        try:
+            entry_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            
+            if time_period == 'last_week':
+                if (now - entry_date) <= timedelta(days=7):
+                    filtered_rows.append((date_str, journal_type, content))
+            elif time_period == 'last_month':
+                if (now - entry_date) <= timedelta(days=30):
+                    filtered_rows.append((date_str, journal_type, content))
+            elif time_period == 'last_3months':
+                if (now - entry_date) <= timedelta(days=90):
+                    filtered_rows.append((date_str, journal_type, content))
+        except:
+            # If date parsing fails, skip it (don't include in filtered results)
+            pass
+    
+    return filtered_rows
+
 @app.route("/")
 def home():
     conn = sqlite3.connect("journal.db")
@@ -342,12 +455,25 @@ def new_entry():
 
 @app.route("/analytics")
 def analytics():
+    # Get separate time period filters from query parameters
+    sentiment_period = request.args.get('sentiment_period', 'all_time')
+    emotion_period = request.args.get('emotion_period', 'all_time')
+    
+    # Validate periods
+    valid_periods = ['all_time', 'last_week', 'last_month', 'last_3months']
+    if sentiment_period not in valid_periods:
+        sentiment_period = 'all_time'
+    if emotion_period not in valid_periods:
+        emotion_period = 'all_time'
+    
     conn = sqlite3.connect("journal.db")
     c = conn.cursor()
-    c.execute("SELECT date, journal_type, content FROM entries")
-    rows = c.fetchall()
+    c.execute("SELECT date, journal_type, content FROM entries ORDER BY date")
+    all_rows = c.fetchall()
     conn.close()
 
+    # Keep all rows for other analytics (entry types, common words, etc.)
+    rows = all_rows
     total_entries = len(rows)
 
     # Fields to exclude (choice/select fields) - only analyze user-entered text
@@ -404,22 +530,52 @@ def analytics():
         except:
             pass
 
-    # --- 4. Sentiment Trend (dummy data for now) ---
-    # In future, compute this using a sentiment analysis library (e.g., TextBlob or VADER)
+    # --- 4. Sentiment Trend (real sentiment analysis) - filtered by sentiment_period ---
+    sentiment_rows = filter_rows_by_period(all_rows, sentiment_period)
+    sentiment_by_date = {}
+    
+    for date_str, _, content in sentiment_rows:
+        try:
+            entry_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            date_key = entry_date.strftime("%Y-%m-%d")
+            
+            # Extract text from entry
+            text = extract_entry_text(content, excluded_fields)
+            
+            if text:
+                sentiment_score = analyze_sentiment(text)
+                
+                if date_key not in sentiment_by_date:
+                    sentiment_by_date[date_key] = []
+                sentiment_by_date[date_key].append(sentiment_score)
+        except:
+            continue
+    
+    # Calculate average sentiment per day
     sentiment_trend = {}
-    for i, (date_str, _, content) in enumerate(rows[-10:]):  # last 10 entries
-        sentiment_trend[date_str.split(" ")[0]] = (i % 5 - 2) / 2  # dummy sentiment between -1 and +1
+    for date_key, scores in sentiment_by_date.items():
+        if scores:
+            sentiment_trend[date_key] = round(sum(scores) / len(scores), 3)
+    
+    # Sort by date for proper chart display
+    sentiment_trend = dict(sorted(sentiment_trend.items()))
 
-    # --- 5. Emotion Distribution (placeholder data) ---
-    # Replace with your emotion detection logic if you have one
+    # --- 5. Emotion Distribution (real emotion detection) - filtered by emotion_period ---
+    emotion_rows = filter_rows_by_period(all_rows, emotion_period)
     emotion_counts = {
-        "Joy": 10,
-        "Sadness": 5,
-        "Anger": 3,
-        "Fear": 4,
-        "Surprise": 2,
-        "Neutral": 8
+        "Joy": 0,
+        "Sadness": 0,
+        "Anger": 0,
+        "Fear": 0,
+        "Surprise": 0,
+        "Neutral": 0
     }
+    
+    for date_str, _, content in emotion_rows:
+        text = extract_entry_text(content, excluded_fields)
+        if text:
+            emotion = detect_emotion(text)
+            emotion_counts[emotion] = emotion_counts.get(emotion, 0) + 1
 
     # --- 6. Words by Day of Week (average word count) ---
     words_by_day = {d: 0 for d in weekdays}
@@ -463,7 +619,9 @@ def analytics():
         weekly_counts=weekly_counts,
         sentiment_trend=sentiment_trend,
         emotion_counts=emotion_counts,
-        words_by_day=words_by_day
+        words_by_day=words_by_day,
+        sentiment_period=sentiment_period,
+        emotion_period=emotion_period
     )
 
 

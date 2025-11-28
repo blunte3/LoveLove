@@ -81,13 +81,29 @@
 
       <!-- Mood Trend -->
       <div class="bg-white rounded-2xl shadow-md p-6">
-        <h3 class="text-xl font-semibold text-[var(--secondary)] mb-4">Average Sentiment Over Time</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-[var(--secondary)]">Average Sentiment Over Time</h3>
+          <select id="sentimentPeriod" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none">
+            <option value="all_time" {% if sentiment_period == 'all_time' %}selected{% endif %}>All Time</option>
+            <option value="last_3months" {% if sentiment_period == 'last_3months' %}selected{% endif %}>Last 3 Months</option>
+            <option value="last_month" {% if sentiment_period == 'last_month' %}selected{% endif %}>Last Month</option>
+            <option value="last_week" {% if sentiment_period == 'last_week' %}selected{% endif %}>Last Week</option>
+          </select>
+        </div>
         <canvas id="moodTrendChart" height="120"></canvas>
       </div>
 
       <!-- Emotion Distribution -->
       <div class="bg-white rounded-2xl shadow-md p-6">
-        <h3 class="text-xl font-semibold text-[var(--secondary)] mb-4">Emotion Distribution</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold text-[var(--secondary)]">Emotion Distribution</h3>
+          <select id="emotionPeriod" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-[var(--primary)] outline-none">
+            <option value="all_time" {% if emotion_period == 'all_time' %}selected{% endif %}>All Time</option>
+            <option value="last_3months" {% if emotion_period == 'last_3months' %}selected{% endif %}>Last 3 Months</option>
+            <option value="last_month" {% if emotion_period == 'last_month' %}selected{% endif %}>Last Month</option>
+            <option value="last_week" {% if emotion_period == 'last_week' %}selected{% endif %}>Last Week</option>
+          </select>
+        </div>
         <canvas id="emotionChart" height="120"></canvas>
       </div>
 
@@ -114,6 +130,26 @@
     const sentimentTrend = {{ sentiment_trend | tojson if sentiment_trend is defined else '{}' }};
     const emotionCounts = {{ emotion_counts | tojson if emotion_counts is defined else '{}' }};
     const wordsByDay = {{ words_by_day | tojson if words_by_day is defined else '{}' }};
+
+    // Function to update analytics when time period changes (independent updates)
+    document.addEventListener('DOMContentLoaded', function() {
+      const sentimentSelect = document.getElementById('sentimentPeriod');
+      const emotionSelect = document.getElementById('emotionPeriod');
+      
+      sentimentSelect.addEventListener('change', function() {
+        const newSentimentPeriod = this.value;
+        const currentEmotionPeriod = emotionSelect.value;
+        // Keep emotion period unchanged, only update sentiment period
+        window.location.href = `/analytics?sentiment_period=${newSentimentPeriod}&emotion_period=${currentEmotionPeriod}`;
+      });
+      
+      emotionSelect.addEventListener('change', function() {
+        const newEmotionPeriod = this.value;
+        const currentSentimentPeriod = sentimentSelect.value;
+        // Keep sentiment period unchanged, only update emotion period
+        window.location.href = `/analytics?sentiment_period=${currentSentimentPeriod}&emotion_period=${newEmotionPeriod}`;
+      });
+    });
 
     // Entries by Type
     new Chart(document.getElementById('entriesByTypeChart'), {
