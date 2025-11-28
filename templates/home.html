@@ -45,12 +45,6 @@
                 {{ date }}
               {% endif %}
             </a>
-
-            {% if journal_type != "Free Write" %}
-              <p class="mt-2 text-gray-600 leading-relaxed">
-                {{ content[:200] }}{% if content|length > 200 %}...{% endif %}
-              </p>
-            {% endif %}
           </div>
         {% endfor %}
       </div>

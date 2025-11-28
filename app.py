@@ -313,15 +313,7 @@ def home():
         if not title or title.strip() == "":
             title = date
 
-        # Create content preview (for non-Free Write entries)
-        try:
-            content_dict = json.loads(content)
-            text_preview = content_dict.get("content") or next(iter(content_dict.values()), "")
-            text_preview = (text_preview[:120] + "...") if len(text_preview) > 120 else text_preview
-        except:
-            text_preview = content
-
-        decoded_entries.append((entry_id, date, title, journal_type, text_preview))
+        decoded_entries.append((entry_id, date, title, journal_type, ""))
 
     return render_template("home.html", entries=decoded_entries)
 
