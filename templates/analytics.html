@@ -43,10 +43,7 @@
       <div class="bg-white rounded-2xl shadow-md p-6 text-center">
         <p class="text-gray-500 text-sm mb-1">Most Frequent Type</p>
         <p class="text-2xl font-semibold text-[var(--secondary)]">
-          {% if type_counts %}
-            {% set sorted_types = type_counts|dictsort(true, by='value') %}
-            {{ sorted_types[0][0] }}
-          {% else %} N/A {% endif %}
+          {{ most_frequent_type }}
         </p>
       </div>
 

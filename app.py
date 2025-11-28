@@ -516,6 +516,11 @@ def analytics():
     type_counts = {}
     for _, journal_type, _ in rows:
         type_counts[journal_type] = type_counts.get(journal_type, 0) + 1
+    
+    # Find most frequent type
+    most_frequent_type = "N/A"
+    if type_counts:
+        most_frequent_type = max(type_counts.items(), key=lambda x: x[1])[0]
 
     # --- 2. Combine all text for common words ---
     
@@ -632,6 +637,7 @@ def analytics():
         "analytics.html",
         total_entries=total_entries,
         type_counts=type_counts,
+        most_frequent_type=most_frequent_type,
         common_words=common_words,
         weekly_counts=weekly_counts,
         sentiment_trend=sentiment_trend,
