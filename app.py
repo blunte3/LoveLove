@@ -411,10 +411,27 @@ def filter_rows_by_period(rows, time_period):
 
 @app.route("/")
 def home():
+    # Get sort and search parameters
+    sort_by = request.args.get('sort', 'date_desc')  # date_desc, date_asc, type
+    search_date = request.args.get('date', '')  # YYYY-MM-DD format
+    
     conn = sqlite3.connect("journal.db")
     c = conn.cursor()
-    # include title
-    c.execute("SELECT id, date, title, journal_type, content FROM entries ORDER BY id DESC")
+    
+    # Build query based on sort and search
+    if search_date:
+        # Search by specific date
+        c.execute("SELECT id, date, title, journal_type, content FROM entries WHERE date LIKE ? ORDER BY date DESC", 
+                  (f"{search_date}%",))
+    else:
+        # Normal query with sorting
+        if sort_by == 'date_asc':
+            c.execute("SELECT id, date, title, journal_type, content FROM entries ORDER BY date ASC")
+        elif sort_by == 'type':
+            c.execute("SELECT id, date, title, journal_type, content FROM entries ORDER BY journal_type, date DESC")
+        else:  # date_desc (default)
+            c.execute("SELECT id, date, title, journal_type, content FROM entries ORDER BY date DESC")
+    
     entries = c.fetchall()
     conn.close()
 
@@ -428,7 +445,7 @@ def home():
 
         decoded_entries.append((entry_id, date, title, journal_type, ""))
 
-    return render_template("home.html", entries=decoded_entries)
+    return render_template("home.html", entries=decoded_entries, sort_by=sort_by, search_date=search_date)
 
 @app.route("/new", methods=["GET", "POST"])
 def new_entry():

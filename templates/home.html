@@ -32,17 +32,53 @@
   <main class="max-w-3xl mx-auto px-4 py-10">
     <h2 class="text-3xl font-bold mb-8 text-center text-[var(--secondary)]">Recent Journal Entries</h2>
 
+    <!-- Search and Sort Controls -->
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-6">
+      <div class="flex flex-col sm:flex-row gap-4">
+        <!-- Date Search -->
+        <div class="flex-1">
+          <label for="dateSearch" class="block text-sm font-semibold text-gray-600 mb-2">Search by Date</label>
+          <div class="flex gap-2">
+            <input type="date" id="dateSearch" value="{{ search_date }}" 
+                   class="flex-1 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[var(--primary)] outline-none">
+            <button onclick="searchByDate()" class="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--secondary)] transition">
+              Search
+            </button>
+            {% if search_date %}
+            <button onclick="clearSearch()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+              Clear
+            </button>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Sort Options -->
+        <div class="flex-1">
+          <label for="sortSelect" class="block text-sm font-semibold text-gray-600 mb-2">Sort By</label>
+          <select id="sortSelect" onchange="changeSort()" 
+                  class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[var(--primary)] outline-none">
+            <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>Newest First</option>
+            <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Oldest First</option>
+            <option value="type" {% if sort_by == 'type' %}selected{% endif %}>By Journal Type</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     {% if entries %}
       <div class="space-y-6">
         {% for id, date, title, journal_type, content in entries %}
           <div class="bg-white rounded-2xl shadow-md p-6 transition hover:shadow-lg hover:-translate-y-1 duration-300">
-            <div class="text-sm text-gray-500 mb-1 font-semibold tracking-wide">{{ journal_type }}</div>
+            <div class="flex justify-between items-start mb-2">
+              <div class="text-sm text-gray-500 font-semibold tracking-wide">{{ journal_type }}</div>
+              <div class="text-xs text-gray-400">{{ date.split(' ')[0] if ' ' in date else date }}</div>
+            </div>
 
             <a href="{{ url_for('view_entry', entry_id=id) }}" class="block text-xl font-semibold text-[var(--primary)] hover:text-[var(--secondary)] transition">
               {% if title and title.strip() %}
                 {{ title }}
               {% else %}
-                {{ date }}
+                {{ date.split(' ')[0] if ' ' in date else date }}
               {% endif %}
             </a>
           </div>
@@ -67,6 +103,45 @@
   <a href="{{ url_for('new_entry') }}" class="fixed bottom-8 right-8 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white rounded-full w-14 h-14 flex items-center justify-center text-3xl shadow-lg hover:scale-110 transition">
     +
   </a>
+
+  <script>
+    function searchByDate() {
+      const dateInput = document.getElementById('dateSearch');
+      const date = dateInput.value;
+      if (date) {
+        const currentSort = new URLSearchParams(window.location.search).get('sort') || 'date_desc';
+        window.location.href = `/?date=${date}&sort=${currentSort}`;
+      }
+    }
+    
+    function clearSearch() {
+      const currentSort = new URLSearchParams(window.location.search).get('sort') || 'date_desc';
+      window.location.href = `/?sort=${currentSort}`;
+    }
+    
+    function changeSort() {
+      const sortSelect = document.getElementById('sortSelect');
+      const sortValue = sortSelect.value;
+      const currentDate = new URLSearchParams(window.location.search).get('date') || '';
+      if (currentDate) {
+        window.location.href = `/?date=${currentDate}&sort=${sortValue}`;
+      } else {
+        window.location.href = `/?sort=${sortValue}`;
+      }
+    }
+    
+    // Allow Enter key to trigger search
+    document.addEventListener('DOMContentLoaded', function() {
+      const dateInput = document.getElementById('dateSearch');
+      if (dateInput) {
+        dateInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            searchByDate();
+          }
+        });
+      }
+    });
+  </script>
 
 </body>
 </html>
